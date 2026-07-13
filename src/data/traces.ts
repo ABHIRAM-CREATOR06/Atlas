@@ -1,0 +1,26 @@
+export const traces: Record<string, string> = {
+	"x3dh-double-ratchet": [
+		'{"t":0,"actor":"bob","event":"publish_bundle","from":"bob","to":"server","label":"Prekey bundle","inputs":["IK_B_pub","SPK_B_pub","OPK_B_pub"],"output_ref":"bundle_b_14f2"}',
+		'{"t":1,"actor":"alice","event":"fetch_bundle","from":"alice","to":"server","label":"Fetch Bob bundle","inputs":["bob"],"output_ref":"bundle_b_14f2"}',
+		'{"t":2,"actor":"alice","event":"dh_compute","label":"DH1","inputs":["IK_A","SPK_B"],"output_ref":"dh1_91ac"}',
+		'{"t":3,"actor":"alice","event":"dh_compute","label":"DH2","inputs":["EK_A","IK_B"],"output_ref":"dh2_3bb8"}',
+		'{"t":4,"actor":"alice","event":"dh_compute","label":"DH3","inputs":["EK_A","SPK_B"],"output_ref":"dh3_a681"}',
+		'{"t":5,"actor":"alice","event":"dh_compute","label":"DH4","inputs":["EK_A","OPK_B"],"output_ref":"dh4_e2d0"}',
+		'{"t":6,"actor":"alice","event":"kdf_derive","label":"Shared secret","inputs":["dh1_91ac","dh2_3bb8","dh3_a681","dh4_e2d0"],"output_ref":"sk_77c4"}',
+		'{"t":7,"actor":"alice","event":"aead_encrypt","from":"alice","to":"bob","label":"Initial message","inputs":["sk_77c4","AD_A_B"],"output_ref":"ct0_0df9"}',
+		'{"t":8,"actor":"bob","event":"dh_compute","label":"DH1 verify","inputs":["SPK_B","IK_A"],"output_ref":"dh1_91ac"}',
+		'{"t":9,"actor":"bob","event":"kdf_derive","label":"Shared secret","inputs":["dh1_91ac","dh2_3bb8","dh3_a681","dh4_e2d0"],"output_ref":"sk_77c4"}',
+		'{"t":10,"actor":"alice","event":"ratchet_dh","label":"Alice DH ratchet","chain":"root","output_ref":"rk_a_4aa1","state":{"root":"rk_a_4aa1","send":"ck_a_23d2","receive":"ck_a_991b"}}',
+		'{"t":11,"actor":"alice","event":"ratchet_symmetric","label":"A -> B #0","chain":"send","msg_index":0,"output_ref":"mk_a0_63f1","state":{"root":"rk_a_4aa1","send":"ck_a_8ca0","receive":"ck_a_991b"}}',
+		'{"t":12,"actor":"bob","event":"ratchet_dh","label":"Bob DH ratchet","chain":"root","output_ref":"rk_b_4aa1","state":{"root":"rk_b_4aa1","send":"ck_b_51ff","receive":"ck_b_8ca0"}}',
+		'{"t":13,"actor":"bob","event":"ratchet_symmetric","label":"B -> A #0","chain":"send","msg_index":0,"output_ref":"mk_b0_f019","state":{"root":"rk_b_4aa1","send":"ck_b_6bc7","receive":"ck_b_8ca0"}}',
+	].join("\n"),
+	"noise-nn": [
+		'{"t":0,"actor":"initiator","event":"send_ephemeral","from":"initiator","to":"responder","label":"e","inputs":["e_i_pub"],"output_ref":"msg_e_i_7a21"}',
+		'{"t":1,"actor":"responder","event":"send_ephemeral","from":"responder","to":"initiator","label":"e","inputs":["e_r_pub"],"output_ref":"msg_e_r_2dd0"}',
+		'{"t":2,"actor":"initiator","event":"dh_compute","label":"ee","inputs":["e_i","e_r_pub"],"output_ref":"ee_52bf"}',
+		'{"t":3,"actor":"responder","event":"dh_compute","label":"ee","inputs":["e_r","e_i_pub"],"output_ref":"ee_52bf"}',
+		'{"t":4,"actor":"initiator","event":"kdf_derive","label":"Split","inputs":["ck_0","ee_52bf"],"output_ref":"h_731e"}',
+		'{"t":5,"actor":"responder","event":"kdf_derive","label":"Split","inputs":["ck_0","ee_52bf"],"output_ref":"h_731e"}',
+	].join("\n"),
+};
