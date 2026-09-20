@@ -10,12 +10,12 @@
 [![React 19](https://img.shields.io/badge/React-19.0-61dafb.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6.0-646cff.svg)](https://vitejs.dev/)
 [![Vitest](https://img.shields.io/badge/Vitest-5.0-green.svg)](https://vitest.dev/)
-[![Protocols](https://img.shields.io/badge/Catalog-15%20Protocols-orange.svg)](#bundled-protocols)
+[![Protocols](https://img.shields.io/badge/Catalog-15%20Protocols-orange.svg)](#bundled-protocol-catalog-15-modules)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## ⚡ Overview
+## Overview
 
 Most explanations of network or cryptographic protocols rely on static text and basic sequence diagrams. **Atlas is an interactive execution engine**. Point it at a **JSONL trace** of any protocol — handshakes, key agreement, frame multiplexing, or consensus logs — and Atlas reconstructs and replays the execution step-by-step with state verification, dependency graph analysis, and threat overlays.
 
@@ -23,18 +23,18 @@ Atlas is completely **protocol-agnostic**. Everything protocol-specific lives in
 
 ---
 
-## 🎯 Key Capabilities
+## Key Capabilities
 
-- 🔍 **Searchable Protocol Catalog**: Explore 15 pre-loaded protocols categorized by pattern (*Transport*, *Application*, *Secure Transport*, *End-to-End Encryption*, *Identity & Authorization*, *Messaging*, *RPC*, *Distributed Systems*) with difficulty levels (*Beginner*, *Intermediate*, *Advanced*).
-- ⚖️ **Side-by-Side Comparison Mode**: Compare any two protocols side-by-side across architecture, transport layer requirements, multiplexing, statefulness, security model, and latency trade-offs.
-- 🔄 **Interactive Execution Engine**: Sequence diagrams, state timelines with scrubber auto-playback, finite state machines, parameter dependency graphs, and narrated walkthroughs.
-- 🛡️ **Threat & Failure Overlays**: Simulate passive eavesdropping, active tampering, key compromise blast-radius analysis, and packet drops/delays.
-- 🩺 **Automated Diagnostics**: Multi-pass validator detects missing inputs, unproduced references, illegal state transitions, and out-of-order sequence numbers with actionable remediation instructions.
-- 🔒 **Zero-Key Privacy Model**: Operates entirely on symbolic reference IDs and truncated hashes — no private keys or plaintext secrets required. 100% local browser execution.
+- **Searchable Protocol Catalog**: Explore 15 pre-loaded protocols categorized by pattern (*Transport*, *Application*, *Secure Transport*, *End-to-End Encryption*, *Identity & Authorization*, *Messaging*, *RPC*, *Distributed Systems*) with difficulty levels (*Beginner*, *Intermediate*, *Advanced*).
+- **Side-by-Side Comparison Mode**: Compare any two protocols side-by-side across architecture, transport layer requirements, multiplexing, statefulness, security model, and latency trade-offs.
+- **Interactive Execution Engine**: Sequence diagrams, state timelines with scrubber auto-playback, finite state machines, parameter dependency graphs, and narrated walkthroughs.
+- **Threat & Failure Overlays**: Simulate passive eavesdropping, active tampering, key compromise blast-radius analysis, and packet drops/delays.
+- **Automated Diagnostics**: Multi-pass validator detects missing inputs, unproduced references, illegal state transitions, and out-of-order sequence numbers with actionable remediation instructions.
+- **Zero-Key Privacy Model**: Operates entirely on symbolic reference IDs and truncated hashes — no private keys or plaintext secrets required. 100% local browser execution.
 
 ---
 
-## 🔬 Interactive Views
+## Interactive Views
 
 | View | Description |
 | :--- | :--- |
@@ -46,7 +46,7 @@ Atlas is completely **protocol-agnostic**. Everything protocol-specific lives in
 
 ---
 
-## 📚 Bundled Protocol Catalog (15 Modules)
+## Bundled Protocol Catalog (15 Modules)
 
 Atlas includes 15 fully-featured protocol modules complete with versioned schemas, valid/failure trace datasets, glossaries, and walkthroughs:
 
@@ -70,7 +70,7 @@ Atlas includes 15 fully-featured protocol modules complete with versioned schema
 
 ---
 
-## 🚀 Quick Start & Local Setup
+## Quick Start & Local Setup
 
 ```bash
 # Clone repository
@@ -92,7 +92,7 @@ npm run build
 
 ---
 
-## 📝 Trace Format (JSONL)
+## Trace Format (JSONL)
 
 Atlas reads event traces in single-line JSON (`.jsonl`) format:
 
@@ -104,17 +104,17 @@ Atlas reads event traces in single-line JSON (`.jsonl`) format:
 
 ---
 
-## 📖 Specifications & Reference Docs
+## Specifications & Reference Docs
 
-- 📄 [Product Specification](docs/agent.md) — Architectural overview & schema definitions
-- 🎨 [Design Specification](docs/design.md) — Visual principles, color system & tokens
-- 📋 [Trace Format Guide](docs/trace-format.md) — Event trace schema & diagnostic codes
-- 🔧 [Protocol Definition Guide](docs/protocol-definition.md) — Authoring guide for custom protocol definitions
-- 🛡️ [Security Policy](docs/security.md) — Zero-key logging rules & safe data handling
-- 🤝 [Halonyx Secura Repository](https://github.com/ABHIRAM-CREATOR06/Halonyx) — Production Signal Protocol implementation
+- [Product Specification](docs/agent.md) — Architectural overview & schema definitions
+- [Design Specification](docs/design.md) — Visual principles, color system & tokens
+- [Trace Format Guide](docs/trace-format.md) — Event trace schema & diagnostic codes
+- [Protocol Definition Guide](docs/protocol-definition.md) — Authoring guide for custom protocol definitions
+- [Security Policy](docs/security.md) — Zero-key logging rules & safe data handling
+- [Halonyx Secura Repository](https://github.com/ABHIRAM-CREATOR06/Halonyx) — Production Signal Protocol implementation
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
