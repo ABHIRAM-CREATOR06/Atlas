@@ -72,6 +72,22 @@ Atlas includes 15 fully-featured protocol modules complete with versioned schema
 
 ## Quick Start & Local Setup
 
+### Automated Setup Scripts
+
+Automated interactive setup scripts are provided for all major operating systems:
+
+- **Windows**:
+  ```cmd
+  setup.bat
+  ```
+- **macOS / Linux**:
+  ```bash
+  chmod +x setup.sh
+  ./setup.sh
+  ```
+
+### Manual Setup Commands
+
 ```bash
 # Clone repository
 git clone https://github.com/ABHIRAM-CREATOR06/Atlas.git
@@ -88,6 +104,29 @@ npm test
 
 # Build production bundle
 npm run build
+```
+
+---
+
+## Docker Deployment
+
+Deploy Atlas locally or on a server using Docker & Nginx:
+
+### Using Docker Compose (Recommended)
+
+```bash
+# Build & start container on http://localhost:8080
+docker compose up --build
+```
+
+### Using Docker CLI
+
+```bash
+# Build image
+docker build -t atlas-web .
+
+# Run container on port 8080
+docker run -d -p 8080:80 --name atlas atlas-web
 ```
 
 ---
