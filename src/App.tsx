@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
+import { ComparisonMode } from "./components/ComparisonMode";
 import { DependencyGraph } from "./components/DependencyGraph";
 import { GuidedWalkthrough } from "./components/GuidedWalkthrough";
 import { Header } from "./components/Header";
 import { ImportExportModal } from "./components/ImportExportModal";
 import { Inspector } from "./components/Inspector";
+import { ProtocolCatalog } from "./components/ProtocolCatalog";
 import { ProtocolSummary } from "./components/ProtocolSummary";
 import { SequenceDiagram } from "./components/SequenceDiagram";
 import { StateMachineView } from "./components/StateMachineView";
@@ -22,7 +24,9 @@ import { isSequenceEvent, parseTrace } from "./lib/trace";
 import type { ProtocolDefinition, TraceEvent, ViewId } from "./types";
 
 export function App() {
+	const [appMode, setAppMode] = useState<"workspace" | "catalog" | "compare">("workspace");
 	const [protocolId, setProtocolId] = useState(protocols[0].id);
+	const [compareTargetId, setCompareTargetId] = useState<string | undefined>();
 	const [customTraceJsonl, setCustomTraceJsonl] = useState<string | null>(null);
 	const [activeView, setActiveView] = useState<ViewId>("sequenceDiagram");
 	const [selectedEvent, setSelectedEvent] = useState<TraceEvent | undefined>();
@@ -84,12 +88,19 @@ export function App() {
 		setSearchQuery("");
 		setSelectedActor("all");
 		setSelectedPhase("all");
+		setAppMode("workspace");
+	}
+
+	function handleOpenCompare(protoId?: string) {
+		if (protoId) setCompareTargetId(protoId);
+		setAppMode("compare");
 	}
 
 	function handleImportSuccess(protoDef?: ProtocolDefinition, traceJsonl?: string) {
 		if (traceJsonl) {
 			setCustomTraceJsonl(traceJsonl);
 			setSelectedEvent(undefined);
+			setAppMode("workspace");
 		}
 	}
 
@@ -99,94 +110,117 @@ export function App() {
 				protocols={protocols}
 				selectedId={protocol.id}
 				onSelectProtocol={handleSelectProtocol}
+				onOpenCatalog={() => setAppMode("catalog")}
+				onOpenCompare={() => handleOpenCompare()}
 				onOpenImport={() => setModalMode("import")}
 				onOpenExport={() => setModalMode("export")}
 			/>
 
-			<ProtocolSummary protocol={protocol} events={filteredEvents} diagnostics={validation.diagnostics} />
-
-			{validation.errors.length > 0 && (
-				<section className="error-strip">
-					<AlertTriangle size={18} />
-					<div>
-						<strong>Trace verification diagnostics</strong>
-						<p>{validation.errors.join(" | ")}</p>
-					</div>
-				</section>
+			{appMode === "catalog" && (
+				<ProtocolCatalog
+					protocols={protocols}
+					onSelectProtocol={handleSelectProtocol}
+					onSelectCompare={handleOpenCompare}
+				/>
 			)}
 
-			<Toolbar
-				protocol={protocol}
-				activeView={activeView}
-				onSelectView={setActiveView}
-				searchQuery={searchQuery}
-				onSearchChange={setSearchQuery}
-				selectedActor={selectedActor}
-				onSelectActor={setSelectedActor}
-				selectedPhase={selectedPhase}
-				onSelectPhase={setSelectedPhase}
-				scenariosList={protocolScenarios}
-				selectedScenarioId={selectedScenarioId}
-				onSelectScenario={setSelectedScenarioId}
-			/>
-
-			<ThreatOverlay scenario={activeScenario} />
-
-			<div className="workspace">
-				<div className="main-visual-column">
-					{activeView === "sequenceDiagram" && (
-						<SequenceDiagram
-							protocol={protocol}
-							events={filteredEvents}
-							selectedEvent={currentEvent}
-							onSelect={setSelectedEvent}
-						/>
-					)}
-
-					{activeView === "stateTimeline" && (
-						<StateTimeline
-							protocol={protocol}
-							events={filteredEvents}
-							selectedEvent={currentEvent}
-							onSelect={setSelectedEvent}
-						/>
-					)}
-
-					{activeView === "stateMachine" && (
-						<StateMachineView
-							protocol={protocol}
-							events={filteredEvents}
-							selectedEvent={currentEvent}
-						/>
-					)}
-
-					{activeView === "dependencyGraph" && (
-						<DependencyGraph
-							events={filteredEvents}
-							compromisedRefs={activeScenario?.affectedEvents || []}
-							onSelectEvent={setSelectedEvent}
-						/>
-					)}
-
-					{activeView === "guidedWalkthrough" && (
-						<GuidedWalkthrough
-							walkthrough={walkthroughs[protocol.id]}
-							onStepSelect={(t) => {
-								if (t !== undefined) {
-									const matchingEvt = filteredEvents.find((e) => e.t === t);
-									if (matchingEvt) setSelectedEvent(matchingEvt);
-								}
-							}}
-						/>
-					)}
-				</div>
-
-				<Inspector
-					protocol={protocol}
-					event={currentEvent}
-					diagnostics={validation.diagnostics}
+			{appMode === "compare" && (
+				<ComparisonMode
+					protocols={protocols}
+					initialProtoAId={compareTargetId || protocol.id}
+					onClose={() => setAppMode("catalog")}
+					onSelectProtocol={handleSelectProtocol}
 				/>
-			</div>
+			)}
+
+			{appMode === "workspace" && (
+				<>
+					<ProtocolSummary protocol={protocol} events={filteredEvents} diagnostics={validation.diagnostics} />
+
+					{validation.errors.length > 0 && (
+						<section className="error-strip">
+							<AlertTriangle size={18} />
+							<div>
+								<strong>Trace verification diagnostics</strong>
+								<p>{validation.errors.join(" | ")}</p>
+							</div>
+						</section>
+					)}
+
+					<Toolbar
+						protocol={protocol}
+						activeView={activeView}
+						onSelectView={setActiveView}
+						searchQuery={searchQuery}
+						onSearchChange={setSearchQuery}
+						selectedActor={selectedActor}
+						onSelectActor={setSelectedActor}
+						selectedPhase={selectedPhase}
+						onSelectPhase={setSelectedPhase}
+						scenariosList={protocolScenarios}
+						selectedScenarioId={selectedScenarioId}
+						onSelectScenario={setSelectedScenarioId}
+					/>
+
+					<ThreatOverlay scenario={activeScenario} />
+
+					<div className="workspace">
+						<div className="main-visual-column">
+							{activeView === "sequenceDiagram" && (
+								<SequenceDiagram
+									protocol={protocol}
+									events={filteredEvents}
+									selectedEvent={currentEvent}
+									onSelect={setSelectedEvent}
+								/>
+							)}
+
+							{activeView === "stateTimeline" && (
+								<StateTimeline
+									protocol={protocol}
+									events={filteredEvents}
+									selectedEvent={currentEvent}
+									onSelect={setSelectedEvent}
+								/>
+							)}
+
+							{activeView === "stateMachine" && (
+								<StateMachineView
+									protocol={protocol}
+									events={filteredEvents}
+									selectedEvent={currentEvent}
+								/>
+							)}
+
+							{activeView === "dependencyGraph" && (
+								<DependencyGraph
+									events={filteredEvents}
+									compromisedRefs={activeScenario?.affectedEvents || []}
+									onSelectEvent={setSelectedEvent}
+								/>
+							)}
+
+							{activeView === "guidedWalkthrough" && (
+								<GuidedWalkthrough
+									walkthrough={walkthroughs[protocol.id]}
+									onStepSelect={(t) => {
+										if (t !== undefined) {
+											const matchingEvt = filteredEvents.find((e) => e.t === t);
+											if (matchingEvt) setSelectedEvent(matchingEvt);
+										}
+									}}
+								/>
+							)}
+						</div>
+
+						<Inspector
+							protocol={protocol}
+							event={currentEvent}
+							diagnostics={validation.diagnostics}
+						/>
+					</div>
+				</>
+			)}
 
 			<ImportExportModal
 				mode={modalMode || "import"}
@@ -199,7 +233,7 @@ export function App() {
 
 			<footer className="footer">
 				<span>
-					<strong>Atlas</strong> · Minimal professional protocol explanation interface
+					<strong>Atlas Protocol Platform</strong> · 15 Protocol Modules · Replay & Analysis
 				</span>
 				<span>Light theme · Accessible by default · Local-first</span>
 			</footer>

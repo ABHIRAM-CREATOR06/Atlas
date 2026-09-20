@@ -31,19 +31,32 @@ Interactive narrated tours for bundled protocols with step navigation, progress 
 
 ## Bundled Protocols
 
-Atlas comes pre-loaded with complete protocol definitions, valid traces, failure traces, glossaries, and walkthroughs for:
+Atlas features a searchable 15-protocol catalog categorized by transport, application, security, messaging, RPC, and consensus patterns:
 
-1. **X3DH + Double Ratchet** (Signal E2EE Handshake & Ratchet)
-2. **TCP Three-Way Handshake** (SYN, SYN-ACK, ACK connection establishment)
-3. **HTTP Request & Response** (GET/POST headers, proxy forwarding, status codes)
-4. **TLS 1.3 Handshake** (1-RTT KeyShare, Certificate Verification, Finished HMAC)
+1. **X3DH + Double Ratchet** (*End-to-End Encryption*) — Signal prekey bundles, DH operations, and root/chain key evolution.
+2. **TCP Three-Way Handshake** (*Transport*) — SYN, SYN-ACK, ACK sequence synchronization and TCP state transitions.
+3. **HTTP Request & Response** (*Application*) — Headers, method semantics, proxy forwarding, and response status codes.
+4. **TLS 1.3 Handshake** (*Secure Transport*) — 1-RTT KeyShare exchange, certificate verification, and HMAC Finished messages.
+5. **DNS Query & Resolution** (*Transport*) — Recursive resolver query, root/TLD delegation, A/AAAA records, and caching.
+6. **WebSocket Protocol** (*Application*) — HTTP/1.1 Upgrade handshake, masked frames, ping/pong, and bidirectional data.
+7. **MQTT Pub/Sub Messaging** (*Messaging*) — Broker CONNECT, PUBLISH QoS levels (0/1/2), and subscriber topic filtering.
+8. **HTTP/2 Binary Framing** (*Application*) — Stream multiplexing, HEADERS/DATA binary frames, and HPACK header compression.
+9. **QUIC Encrypted Transport** (*Secure Transport*) — UDP-based transport, 0-RTT/1-RTT handshake, and connection ID migration.
+10. **Noise Protocol Framework (NN & XX)** (*Secure Transport*) — Dynamic DH patterns, static/ephemeral handshake tokens, and payload AEAD.
+11. **SSH-2 Key Exchange** (*Secure Transport*) — Diffie-Hellman KEX, host key validation, userauth, and channel session request.
+12. **OAuth 2.0 Authorization Code Flow** (*Identity & Authorization*) — PKCE code challenge, authorization grant, token exchange, and API request.
+13. **WebAuthn / FIDO2 Authentication** (*Identity & Authorization*) — Public key credential creation, challenge-response signature, and authenticator data.
+14. **gRPC over HTTP/2** (*RPC*) — Protocol Buffers binary wire format, gRPC length-prefixed framing, and bidirectional streaming.
+15. **Raft Consensus Protocol** (*Distributed Systems*) — Leader election, term validation, Heartbeat/AppendEntries, and quorum log replication.
 
 ---
 
 ## Key Features
 
-- **Protocol-Agnostic Core**: Declarative schemas for protocol definitions and JSONL traces.
-- **Trace Diagnostics & Verification**: Multi-pass validator checking timestamps, actor declarations, route invalidities, duplicate IDs, missing references, and state transitions with actionable remediation text.
+- **Searchable Protocol Catalog**: Category pills, difficulty badges (*Beginner*, *Intermediate*, *Advanced*), learning objectives, and tag-based search.
+- **Side-by-Side Protocol Comparison Mode**: Compare two protocols across architectural patterns, transport dependencies, security properties, state complexity, and latency trade-offs.
+- **Protocol-Agnostic Core Engine**: Declarative schemas for versioned protocol definitions, trace parsing, state transition tracking, and execution graphs.
+- **Trace Diagnostics & Automated Verification**: Multi-pass validator checking timestamps, actor declarations, route invalidities, duplicate IDs, missing references, and state transitions with actionable remediation text.
 - **Threat Model & Scenario Overlays**: Simulate passive eavesdropping, replay attacks, key compromises, and packet loss/delay.
 - **Safe Data Handling**: Built around symbolic references and truncated hashes — never requires real private keys or sensitive plaintexts.
 - **Local-First & Accessible**: Runs 100% in the browser with full keyboard navigation, screen-reader support, high contrast, and drag-and-drop file import/export.

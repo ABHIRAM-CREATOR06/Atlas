@@ -1,49 +1,39 @@
 import type { ScenarioDefinition } from "../types";
+import { dnsScenarios } from "./protocols/dns/scenarios";
+import { grpcScenarios } from "./protocols/grpc/scenarios";
+import { http2Scenarios } from "./protocols/http2/scenarios";
+import { mqttScenarios } from "./protocols/mqtt/scenarios";
+import { noiseScenarios } from "./protocols/noise/scenarios";
+import { oauth2Scenarios } from "./protocols/oauth2/scenarios";
+import { quicScenarios } from "./protocols/quic/scenarios";
+import { raftScenarios } from "./protocols/raft/scenarios";
+import { sshScenarios } from "./protocols/ssh/scenarios";
+import { webauthnScenarios } from "./protocols/webauthn/scenarios";
+import { websocketScenarios } from "./protocols/websocket/scenarios";
 
-export const scenarios: Record<string, ScenarioDefinition[]> = {
+export const existingScenarios: Record<string, ScenarioDefinition[]> = {
 	"x3dh-ratchet": [
 		{
 			id: "none",
 			name: "Normal Execution",
 			category: "network",
-			description: "Normal protocol execution without network anomalies or compromised keys.",
-			impactDescription: "All messages arrive in order with full confidentiality and integrity.",
-			attackerVisibility: "Attacker observes metadata (IP, timestamps, payload size) but cannot read plaintexts.",
-			protectedProperties: ["Confidentiality", "Integrity", "Forward Secrecy", "Post-Compromise Recovery"],
+			description: "Normal protocol execution without network anomalies.",
+			impactDescription: "All messages arrive in order.",
+			attackerVisibility: "Attacker observes metadata.",
+			protectedProperties: ["Confidentiality", "Integrity"],
 			affectedEvents: [],
 		},
 		{
-			id: "passive_observer",
-			name: "Passive Network Eavesdropper",
-			category: "network",
-			description: "Attacker intercepts and records all network traffic between Alice, Server, and Bob.",
-			impactDescription: "No impact on payload secrecy due to AEAD encryption and DH key agreement.",
-			attackerVisibility: "Sees packet sizes, metadata, public keys (EKa, IKb), but zero plaintext secrets.",
-			protectedProperties: ["Payload Confidentiality", "Key Confidentiality"],
-			affectedEvents: ["evt_9", "evt_10"],
-		},
-		{
 			id: "key_compromise",
-			name: "Compromised Prekey (SPK)",
-			category: "compromise",
-			description: "Attacker steals Bob's Signed Prekey (spk_bob_21f0) private key at t=12.",
-			impactDescription: "Past messages (t < 12) remain protected due to Ephemeral Key (EKa) in DH4 & Double Ratchet.",
-			attackerVisibility: "Cannot decrypt past messages (Forward Secrecy preserved).",
-			protectedProperties: ["Perfect Forward Secrecy (PFS)"],
-			affectedEvents: ["evt_3", "evt_5"],
-		},
-		{
-			id: "replay_attack",
-			name: "Replay Attack Attempt",
-			category: "attacker",
-			description: "Attacker captures InitialMessage (evt_9) and retransmits it to Bob at t=20.",
-			impactDescription: "Bob detects duplicate message ID and exhausted one-time prekey, dropping the replayed message.",
-			attackerVisibility: "Attacker cannot generate valid new ciphertext without active ratchet key.",
-			protectedProperties: ["Replay Protection"],
-			affectedEvents: ["evt_9"],
+			name: "Identity Key Compromise",
+			category: "cryptographic",
+			description: "Attacker obtains Bob's long-term Identity Key.",
+			impactDescription: "Future sessions using the compromised key can be impersonated unless forward secrecy is protected.",
+			attackerVisibility: "Attacker holds IKb.",
+			protectedProperties: ["Forward Secrecy"],
+			affectedEvents: ["evt_1", "evt_4"],
 		},
 	],
-
 	"tcp-3way": [
 		{
 			id: "none",
@@ -51,19 +41,48 @@ export const scenarios: Record<string, ScenarioDefinition[]> = {
 			category: "network",
 			description: "Clean TCP 3-way handshake.",
 			impactDescription: "SYN, SYN-ACK, ACK delivered successfully.",
-			attackerVisibility: "Attacker sees TCP headers and ISNs.",
+			attackerVisibility: "Attacker sees TCP ISNs.",
 			protectedProperties: ["Connection Integrity"],
 			affectedEvents: [],
 		},
+	],
+	"http-flow": [
 		{
-			id: "syn_drop",
-			name: "Packet Loss: SYN Dropped",
+			id: "none",
+			name: "Normal Request",
 			category: "network",
-			description: "The initial SYN packet is dropped by an intermediate router.",
-			impactDescription: "Client retransmission timer fires after timeout (RTO); Client resends SYN.",
-			attackerVisibility: "Attacker observes missing ACK.",
-			protectedProperties: ["Retransmission Reliability"],
-			affectedEvents: ["tcp_1"],
+			description: "Clean HTTP GET request and 200 response.",
+			impactDescription: "Response returned successfully.",
+			attackerVisibility: "Plaintext HTTP visible to network.",
+			protectedProperties: ["Availability"],
+			affectedEvents: [],
 		},
 	],
+	"tls13-handshake": [
+		{
+			id: "none",
+			name: "Normal 1-RTT Handshake",
+			category: "network",
+			description: "Clean TLS 1.3 key exchange.",
+			impactDescription: "Keys derived and encrypted extensions exchanged.",
+			attackerVisibility: "Attacker sees TLS extensions.",
+			protectedProperties: ["Confidentiality", "Integrity"],
+			affectedEvents: [],
+		},
+	],
+};
+
+export const scenarios: Record<string, ScenarioDefinition[]> = {
+	...existingScenarios,
+	dns: dnsScenarios,
+	websocket: websocketScenarios,
+	mqtt: mqttScenarios,
+	http2: http2Scenarios,
+	quic: quicScenarios,
+	noise: noiseScenarios,
+	ssh: sshScenarios,
+	oauth2: oauth2Scenarios,
+	webauthn: webauthnScenarios,
+	grpc: grpcScenarios,
+	raft: raftScenarios,
 };

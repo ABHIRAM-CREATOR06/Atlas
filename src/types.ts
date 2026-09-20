@@ -5,6 +5,18 @@ export type ViewId =
 	| "dependencyGraph"
 	| "guidedWalkthrough";
 
+export type ProtocolCategory =
+	| "Transport"
+	| "Application"
+	| "Secure Transport"
+	| "End-to-End Encryption"
+	| "Identity & Authorization"
+	| "Messaging"
+	| "RPC"
+	| "Distributed Systems";
+
+export type ProtocolDifficulty = "Beginner" | "Intermediate" | "Advanced";
+
 export type Explanation = {
 	short: string;
 	detailed?: string;
@@ -106,7 +118,7 @@ export type FailureModeDefinition = {
 	id: string;
 	name: string;
 	description: string;
-	symptom: string;
+	symptom?: string;
 	remediation?: string;
 };
 
@@ -121,7 +133,9 @@ export type ProtocolDefinition = {
 	id: string;
 	name: string;
 	version: string;
-	category: string;
+	category: ProtocolCategory | string;
+	difficulty?: ProtocolDifficulty;
+	tags?: string[];
 	description: string;
 	documentationUrl?: string;
 	learningObjectives?: string[];
@@ -223,11 +237,25 @@ export type Walkthrough = {
 export type ScenarioDefinition = {
 	id: string;
 	name: string;
-	category: "network" | "attacker" | "compromise";
+	category: "network" | "attacker" | "compromise" | "cryptographic";
 	description: string;
 	impactDescription: string;
 	attackerVisibility: string;
 	protectedProperties: string[];
 	affectedEvents: string[];
 	modifiedEvents?: TraceEvent[];
+};
+
+export type ProtocolComparison = {
+	id: string;
+	title: string;
+	protoAId: string;
+	protoBId: string;
+	question: string;
+	summary: string;
+	keyDifferences: {
+		feature: string;
+		protoAValue: string;
+		protoBValue: string;
+	}[];
 };
