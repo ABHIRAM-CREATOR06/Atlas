@@ -2,7 +2,7 @@
 
 ![Atlas Banner](https://private-us-east-1.manuscdn.com/sessionFile/kBWQ68MWP6QCbpqJoQauNK/sandbox/r9qw827hV3aZ8WWzTTlW8r-images_1789921804526_na1fn_L3RtcC9hdGxhcy1sYXRlc3QvYXNzZXRzL2Jhbm5lcg.png?Expires=1790094608&Signature=MEUCIQDDJX7OupRwvgp8ko4I~kMlNQEKhDaAQNEJWS1go6XKDwIgEXkf3jO7fDAG~W~njXh0dZh65-bu7cqYWTGIe5Sn1Us_&Key-Pair-Id=K1K5N5YNBUUMMN)
 
-> **Wireshark for communication protocols with cryptographic depth.**Atlas is an interactive protocol explainer and trace-analysis application. It reconstructs JSONL protocol traces and replays them through sequence diagrams, state timelines, finite-state machines, dependency graphs, guided walkthroughs, and threat overlays.
+> **Wireshark for communication protocols with cryptographic depth.** Atlas is an interactive protocol explainer and trace-analysis application. It reconstructs JSONL protocol traces and replays them through sequence diagrams, state timelines, finite-state machines, dependency graphs, guided walkthroughs, and threat overlays.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
