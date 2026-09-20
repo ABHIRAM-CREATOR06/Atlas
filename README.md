@@ -2,113 +2,99 @@
 
 ![Atlas Banner](./assets/banner.png)
 
-**Wireshark for communication protocols with cryptographic depth.**
+> **Wireshark for communication protocols with cryptographic depth.**
+> 
+> *Created by the developer of [Halonyx Secura](https://github.com/ABHIRAM-CREATOR06/Halonyx) — an end-to-end encrypted messenger implementing the Signal Protocol (X3DH + Double Ratchet) from scratch.*
 
-Most explanations of a cryptographic or network protocol are prose and static diagrams. Atlas is neither. Point it at a **trace** of a protocol running — a handshake, a ratchet, an HTTP exchange, a TCP connection — and it replays the whole thing step by step with rich visual interactivity and automated protocol verification.
-
-Atlas isn't built for one protocol. It's built to visualize *any* communication protocol that can be expressed declaratively — X3DH, Double Ratchet, TLS 1.3, TCP 3-way handshake, HTTP request/response flows, Noise, or a custom protocol you're designing yourself. Everything protocol-specific lives in a versioned **protocol definition**.
-
----
-
-## What It Shows
-
-### 1. Sequence Diagram
-Actor swimlanes (Alice/Bob, Client/Server, Client/Proxy/Server). Directional arrows for each message and self-operation. Click any arrow to expand structured fields, cryptographic parameters (DH computations, HKDF derivations, signature checks), and state changes.
-
-### 2. State Timeline
-A horizontal scrubber with Play/Pause auto-playback, timestamp stepping, actor state variable cards, and cumulative event logs.
-
-### 3. Generic State-Machine View
-Finite state machine nodes and transition triggers, displaying active state highlights, valid/invalid transitions, and terminal/error states.
-
-### 4. Dependency Graph
-Visual node-link directed graph illustrating parameter inputs, output references, operation derivations, and compromised value propagation (blast radius analysis).
-
-### 5. Guided Walkthroughs
-Interactive narrated tours for bundled protocols with step navigation, progress tracking, "Why this matters" callouts, and comprehension check quizzes.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
+[![React 19](https://img.shields.io/badge/React-19.0-61dafb.svg)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.0-646cff.svg)](https://vitejs.dev/)
+[![Vitest](https://img.shields.io/badge/Vitest-5.0-green.svg)](https://vitest.dev/)
+[![Protocols](https://img.shields.io/badge/Catalog-15%20Protocols-orange.svg)](#bundled-protocols)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## Bundled Protocols
+## ⚡ Overview
 
-Atlas features a searchable 15-protocol catalog categorized by transport, application, security, messaging, RPC, and consensus patterns:
+Most explanations of network or cryptographic protocols rely on static text and basic sequence diagrams. **Atlas is an interactive execution engine**. Point it at a **JSONL trace** of any protocol — handshakes, key agreement, frame multiplexing, or consensus logs — and Atlas reconstructs and replays the execution step-by-step with state verification, dependency graph analysis, and threat overlays.
 
-1. **X3DH + Double Ratchet** (*End-to-End Encryption*) — Signal prekey bundles, DH operations, and root/chain key evolution.
-2. **TCP Three-Way Handshake** (*Transport*) — SYN, SYN-ACK, ACK sequence synchronization and TCP state transitions.
-3. **HTTP Request & Response** (*Application*) — Headers, method semantics, proxy forwarding, and response status codes.
-4. **TLS 1.3 Handshake** (*Secure Transport*) — 1-RTT KeyShare exchange, certificate verification, and HMAC Finished messages.
-5. **DNS Query & Resolution** (*Transport*) — Recursive resolver query, root/TLD delegation, A/AAAA records, and caching.
-6. **WebSocket Protocol** (*Application*) — HTTP/1.1 Upgrade handshake, masked frames, ping/pong, and bidirectional data.
-7. **MQTT Pub/Sub Messaging** (*Messaging*) — Broker CONNECT, PUBLISH QoS levels (0/1/2), and subscriber topic filtering.
-8. **HTTP/2 Binary Framing** (*Application*) — Stream multiplexing, HEADERS/DATA binary frames, and HPACK header compression.
-9. **QUIC Encrypted Transport** (*Secure Transport*) — UDP-based transport, 0-RTT/1-RTT handshake, and connection ID migration.
-10. **Noise Protocol Framework (NN & XX)** (*Secure Transport*) — Dynamic DH patterns, static/ephemeral handshake tokens, and payload AEAD.
-11. **SSH-2 Key Exchange** (*Secure Transport*) — Diffie-Hellman KEX, host key validation, userauth, and channel session request.
-12. **OAuth 2.0 Authorization Code Flow** (*Identity & Authorization*) — PKCE code challenge, authorization grant, token exchange, and API request.
-13. **WebAuthn / FIDO2 Authentication** (*Identity & Authorization*) — Public key credential creation, challenge-response signature, and authenticator data.
-14. **gRPC over HTTP/2** (*RPC*) — Protocol Buffers binary wire format, gRPC length-prefixed framing, and bidirectional streaming.
-15. **Raft Consensus Protocol** (*Distributed Systems*) — Leader election, term validation, Heartbeat/AppendEntries, and quorum log replication.
+Atlas is completely **protocol-agnostic**. Everything protocol-specific lives in declarative **versioned protocol definitions**.
 
 ---
 
-## Key Features
+## 🎯 Key Capabilities
 
-- **Searchable Protocol Catalog**: Category pills, difficulty badges (*Beginner*, *Intermediate*, *Advanced*), learning objectives, and tag-based search.
-- **Side-by-Side Protocol Comparison Mode**: Compare two protocols across architectural patterns, transport dependencies, security properties, state complexity, and latency trade-offs.
-- **Protocol-Agnostic Core Engine**: Declarative schemas for versioned protocol definitions, trace parsing, state transition tracking, and execution graphs.
-- **Trace Diagnostics & Automated Verification**: Multi-pass validator checking timestamps, actor declarations, route invalidities, duplicate IDs, missing references, and state transitions with actionable remediation text.
-- **Threat Model & Scenario Overlays**: Simulate passive eavesdropping, replay attacks, key compromises, and packet loss/delay.
-- **Safe Data Handling**: Built around symbolic references and truncated hashes — never requires real private keys or sensitive plaintexts.
-- **Local-First & Accessible**: Runs 100% in the browser with full keyboard navigation, screen-reader support, high contrast, and drag-and-drop file import/export.
-
----
-
-## Documentation & References
-
-- [Product Specification](docs/agent.md) — Product vision, non-negotiable principles, and schema specifications.
-- [Design Specification](docs/design.md) — Visual principles, color system, and layout rules.
-- [Design Reference HTML](docs/design.html) — HTML/CSS reference implementation.
-- [Trace Format Specification](docs/trace-format.md) — JSONL trace schema, fields, and privacy standards.
-- [Protocol Definition Guide](docs/protocol-definition.md) — Guide for authoring custom protocol definitions.
-- [Security & Data Safety](docs/security.md) — Privacy policy and zero-key logging rules.
-- [Contributing Guide](CONTRIBUTING.md) — Development setup, testing, and contribution instructions.
+- 🔍 **Searchable Protocol Catalog**: Explore 15 pre-loaded protocols categorized by pattern (*Transport*, *Application*, *Secure Transport*, *End-to-End Encryption*, *Identity & Authorization*, *Messaging*, *RPC*, *Distributed Systems*) with difficulty levels (*Beginner*, *Intermediate*, *Advanced*).
+- ⚖️ **Side-by-Side Comparison Mode**: Compare any two protocols side-by-side across architecture, transport layer requirements, multiplexing, statefulness, security model, and latency trade-offs.
+- 🔄 **Interactive Execution Engine**: Sequence diagrams, state timelines with scrubber auto-playback, finite state machines, parameter dependency graphs, and narrated walkthroughs.
+- 🛡️ **Threat & Failure Overlays**: Simulate passive eavesdropping, active tampering, key compromise blast-radius analysis, and packet drops/delays.
+- 🩺 **Automated Diagnostics**: Multi-pass validator detects missing inputs, unproduced references, illegal state transitions, and out-of-order sequence numbers with actionable remediation instructions.
+- 🔒 **Zero-Key Privacy Model**: Operates entirely on symbolic reference IDs and truncated hashes — no private keys or plaintext secrets required. 100% local browser execution.
 
 ---
 
-## Stack
+## 🔬 Interactive Views
 
-- React 19 + TypeScript + Vite
-- D3.js — custom sequence diagram & visualization rendering
-- Vitest — automated unit testing engine
-- Minimal professional design system (light canvas, warm neutral surfaces, blue accent)
+| View | Description |
+| :--- | :--- |
+| **Sequence Diagram** | Actor swimlanes with directional message arrows, self-operations, structured field expanders, and cryptographic derivation parameters. |
+| **State Timeline** | Scrubber timeline with Play/Pause playback, timestamp stepping, actor state variable cards, and live log updates. |
+| **State Machine** | FSM node graph displaying active state highlights, valid/invalid state transitions, and terminal/error states. |
+| **Dependency Graph** | Directed graph visualizing key inputs, output derivation lineages, and compromised key blast radius propagation. |
+| **Guided Walkthroughs** | Narrated step-by-step educational tours featuring "Why This Matters" insights and comprehension check quizzes. |
 
 ---
 
-## Running Locally
+## 📚 Bundled Protocol Catalog (15 Modules)
+
+Atlas includes 15 fully-featured protocol modules complete with versioned schemas, valid/failure trace datasets, glossaries, and walkthroughs:
+
+| Category | Protocol | Level | Key Focus |
+| :--- | :--- | :--- | :--- |
+| **End-to-End Encryption** | [X3DH + Double Ratchet](src/data/protocols/x3dh/definition.ts) | `Advanced` | Prekey bundles, DH1-DH4 operations, root/chain key evolution |
+| **Transport** | [TCP Three-Way Handshake](src/data/protocols/tcp/definition.ts) | `Beginner` | SYN / SYN-ACK / ACK sequence numbers & connection states |
+| **Application** | [HTTP Request & Response](src/data/protocols/http/definition.ts) | `Beginner` | Methods, headers, proxy hop-by-hop forwarding, status codes |
+| **Secure Transport** | [TLS 1.3 Handshake](src/data/protocols/tls13/definition.ts) | `Advanced` | 1-RTT KeyShare, Certificate validation, Finished HMAC |
+| **Transport** | [DNS Query & Resolution](src/data/protocols/dns/definition.ts) | `Beginner` | Recursive resolution, root/TLD delegation, A/AAAA records |
+| **Application** | [WebSocket Protocol](src/data/protocols/websocket/definition.ts) | `Intermediate` | HTTP Upgrade handshake, masked frames, bidirectional data |
+| **Messaging** | [MQTT Pub/Sub](src/data/protocols/mqtt/definition.ts) | `Intermediate` | CONNECT handshake, PUBLISH QoS 0/1/2 delivery levels |
+| **Application** | [HTTP/2 Binary Framing](src/data/protocols/http2/definition.ts) | `Intermediate` | Stream multiplexing, HEADERS/DATA binary frames, HPACK |
+| **Secure Transport** | [QUIC Transport](src/data/protocols/quic/definition.ts) | `Advanced` | UDP multiplexing, 0-RTT/1-RTT handshake, connection migration |
+| **Secure Transport** | [Noise Protocol (NN & XX)](src/data/protocols/noise/definition.ts) | `Advanced` | Handshake patterns, static/ephemeral tokens, AEAD payloads |
+| **Secure Transport** | [SSH-2 Key Exchange](src/data/protocols/ssh/definition.ts) | `Intermediate` | DH KEX, host key verification, userauth, channel requests |
+| **Identity & Auth** | [OAuth 2.0 Auth Code](src/data/protocols/oauth2/definition.ts) | `Intermediate` | PKCE challenge, authorization grant, token exchange |
+| **Identity & Auth** | [WebAuthn / FIDO2](src/data/protocols/webauthn/definition.ts) | `Advanced` | Hardware authenticator challenge-response & public keys |
+| **RPC** | [gRPC over HTTP/2](src/data/protocols/grpc/definition.ts) | `Intermediate` | Protobuf serialization, length-prefixed framing, streaming |
+| **Distributed Systems** | [Raft Consensus](src/data/protocols/raft/definition.ts) | `Advanced` | Leader election, Heartbeat/AppendEntries, quorum log consensus |
+
+---
+
+## 🚀 Quick Start & Local Setup
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/ABHIRAM-CREATOR06/Atlas.git
 cd Atlas
 
 # Install dependencies
 npm install
 
-# Start development server
+# Start local development server
 npm run dev
 
-# Run unit tests
+# Run full test suite (Vitest)
 npm test
 
-# Build for production
+# Build production bundle
 npm run build
 ```
 
 ---
 
-## Trace Format
+## 📝 Trace Format (JSONL)
 
-JSON Lines format (one event per line):
+Atlas reads event traces in single-line JSON (`.jsonl`) format:
 
 ```json
 {"id": "evt_1", "t": 0, "actor": "Alice", "event": "FetchPrekeyBundle", "phase": "key_agreement", "target": "Bob"}
@@ -118,6 +104,17 @@ JSON Lines format (one event per line):
 
 ---
 
-## License
+## 📖 Specifications & Reference Docs
 
-[MIT](LICENSE)
+- 📄 [Product Specification](docs/agent.md) — Architectural overview & schema definitions
+- 🎨 [Design Specification](docs/design.md) — Visual principles, color system & tokens
+- 📋 [Trace Format Guide](docs/trace-format.md) — Event trace schema & diagnostic codes
+- 🔧 [Protocol Definition Guide](docs/protocol-definition.md) — Authoring guide for custom protocol definitions
+- 🛡️ [Security Policy](docs/security.md) — Zero-key logging rules & safe data handling
+- 🤝 [Halonyx Secura Repository](https://github.com/ABHIRAM-CREATOR06/Halonyx) — Production Signal Protocol implementation
+
+---
+
+## 📜 License
+
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
