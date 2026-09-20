@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef } from "react";
-import * as d3 from "d3";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import type { ProtocolDefinition, TraceEvent } from "../types";
-import { isTimelineEvent } from "../lib/trace";
+import { computeReplayState } from "../lib/replay";
 
 type StateTimelineProps = {
 	protocol: ProtocolDefinition;
@@ -11,107 +11,122 @@ type StateTimelineProps = {
 };
 
 export function StateTimeline({ protocol, events, selectedEvent, onSelect }: StateTimelineProps) {
-	const svgRef = useRef<SVGSVGElement>(null);
-	const timelineEvents = useMemo(() => events.filter((event) => isTimelineEvent(protocol, event)), [events, protocol]);
-	const activeIndex = Math.max(0, timelineEvents.findIndex((event) => event.t === selectedEvent?.t));
-	const activeEvent = timelineEvents[activeIndex] ?? timelineEvents[0];
+	const maxTime = Math.max(0, ...events.map((e) => e.t));
+	const [currentTime, setCurrentTime] = useState(selectedEvent?.t ?? 0);
+	const [isPlaying, setIsPlaying] = useState(false);
 
 	useEffect(() => {
-		if (!svgRef.current) {
-			return;
+		if (selectedEvent) {
+			setCurrentTime(selectedEvent.t);
 		}
+	}, [selectedEvent]);
 
-		const width = Math.max(680, timelineEvents.length * 118);
-		const height = 180;
-		const svg = d3.select(svgRef.current);
-		svg.selectAll("*").remove();
-		svg.attr("viewBox", `0 0 ${width} ${height}`);
+	useEffect(() => {
+		let timer: ReturnType<typeof setInterval>;
+		if (isPlaying) {
+			timer = setInterval(() => {
+				setCurrentTime((prev) => {
+					if (prev >= maxTime) {
+						setIsPlaying(false);
+						return prev;
+					}
+					const nextEvent = events.find((e) => e.t > prev);
+					return nextEvent ? nextEvent.t : prev + 1;
+				});
+			}, 1200);
+		}
+		return () => clearInterval(timer);
+	}, [events, isPlaying, maxTime]);
 
-		const x = d3.scalePoint<number>().domain(timelineEvents.map((_, index) => index)).range([62, width - 62]).padding(0.5);
-		svg
-			.append("line")
-			.attr("x1", 62)
-			.attr("x2", width - 62)
-			.attr("y1", 82)
-			.attr("y2", 82)
-			.attr("stroke", "rgba(0,0,0,0.12)")
-			.attr("stroke-width", 3);
+	const replayState = computeReplayState(events, protocol, currentTime);
 
-		timelineEvents.forEach((event, index) => {
-			const definition = protocol.stepTypes[event.event];
-			const cx = x(index) ?? 62;
-			const selected = selectedEvent?.t === event.t;
-			const group = svg.append("g").style("cursor", "pointer");
-			group
-				.append("circle")
-				.attr("cx", cx)
-				.attr("cy", 82)
-				.attr("r", selected ? 18 : 13)
-				.attr("fill", definition.color)
-				.attr("stroke", selected ? "#000000" : "rgba(0,0,0,0.18)")
-				.attr("stroke-width", selected ? 3 : 1.5);
-			group
-				.append("text")
-				.text(event.label ?? definition.label)
-				.attr("x", cx)
-				.attr("y", 124)
-				.attr("text-anchor", "middle")
-				.attr("fill", "#000000")
-				.attr("font-size", 12)
-				.attr("font-weight", 700);
-			group
-				.append("text")
-				.text(`t=${event.t}`)
-				.attr("x", cx)
-				.attr("y", 145)
-				.attr("text-anchor", "middle")
-				.attr("fill", "#78736F")
-				.attr("font-size", 11);
-			group.on("click", () => onSelect(event));
-		});
-	}, [onSelect, protocol, selectedEvent, timelineEvents]);
-
-	if (!protocol.views.includes("stateTimeline")) {
-		return (
-			<section className="visual-panel">
-				<div className="panel-title">
-					<p className="eyebrow">State timeline</p>
-					<h2>Not declared</h2>
-				</div>
-				<p className="muted">This protocol definition declares only the sequence view.</p>
-			</section>
-		);
+	function handleStep(delta: number) {
+		const sortedTs = Array.from(new Set(events.map((e) => e.t))).sort((a, b) => a - b);
+		const currentIndex = sortedTs.indexOf(currentTime);
+		const targetIndex = Math.max(0, Math.min(sortedTs.length - 1, currentIndex + delta));
+		const targetTime = sortedTs[targetIndex] ?? currentTime;
+		setCurrentTime(targetTime);
+		const matchingEvt = events.find((e) => e.t === targetTime);
+		if (matchingEvt) {
+			onSelect(matchingEvt);
+		}
 	}
 
 	return (
-		<section className="visual-panel">
-			<div className="panel-title">
-				<p className="eyebrow">State timeline</p>
-				<h2>Ratchet state replay</h2>
+		<article className="card visual">
+			<div className="panel-heading">
+				<div>
+					<p className="eyebrow">State timeline</p>
+					<h3>Replay & state evolution</h3>
+					<p>Scrub through logical timestamp sequence to inspect evolving keys, states, and variables.</p>
+				</div>
+				<div className="playback-controls">
+					<button className="button" onClick={() => handleStep(-1)} aria-label="Previous step">
+						<ChevronLeft size={16} />
+					</button>
+					<button
+						className="button primary"
+						onClick={() => setIsPlaying(!isPlaying)}
+						aria-label={isPlaying ? "Pause playback" : "Play timeline"}
+					>
+						{isPlaying ? <Pause size={16} /> : <Play size={16} />}
+					</button>
+					<button className="button" onClick={() => handleStep(1)} aria-label="Next step">
+						<ChevronRight size={16} />
+					</button>
+				</div>
 			</div>
-			<div className="svg-scroll compact">
-				<svg ref={svgRef} role="img" aria-label={`${protocol.name} state timeline`} />
+
+			<div className="scrubber-row">
+				<span>t=0</span>
+				<input
+					type="range"
+					min={0}
+					max={maxTime}
+					value={currentTime}
+					onChange={(e) => {
+						const val = Number(e.target.value);
+						setCurrentTime(val);
+						const matchingEvt = events.find((evt) => evt.t === val);
+						if (matchingEvt) {
+							onSelect(matchingEvt);
+						}
+					}}
+					aria-label="Replay timeline scrubber"
+				/>
+				<span>t={maxTime}</span>
 			</div>
-			<input
-				className="scrubber"
-				type="range"
-				min={0}
-				max={Math.max(0, timelineEvents.length - 1)}
-				value={activeIndex}
-				onChange={(event) => onSelect(timelineEvents[Number(event.target.value)])}
-				aria-label="Timeline scrubber"
-			/>
-			<div className="state-grid">
-				{protocol.statePanels.map((panel) => {
-					const state = activeEvent?.actor === panel.actor ? activeEvent.state : undefined;
+
+			<div className="state-strip" aria-label="Current actor state values">
+				{protocol.stateVariables.map((sv) => {
+					const val = replayState.currentStateByActor[sv.owner]?.[sv.id] || "uninitialized";
+					const isActive = replayState.activeEvent?.actor === sv.owner;
 					return (
-						<div className="state-panel" key={panel.id}>
-							<span>{panel.label}</span>
-							<strong>{state?.[panel.field] ?? "unchanged"}</strong>
+						<div key={sv.id} className={`state-card ${isActive ? "active" : ""}`}>
+							<span>{sv.label}</span>
+							<strong>{val}</strong>
 						</div>
 					);
 				})}
 			</div>
-		</section>
+
+			<div className="timeline-events-list">
+				<h4>Events up to t={currentTime}</h4>
+				<ul className="events-cumulative">
+					{events
+						.filter((e) => e.t <= currentTime)
+						.map((e) => (
+							<li
+								key={e.id}
+								className={`timeline-event-item ${e.t === currentTime ? "selected" : ""}`}
+								onClick={() => onSelect(e)}
+							>
+								<span className="mono">t={e.t}</span>
+								<strong>[{e.actor}]</strong> {e.label || e.event}
+							</li>
+						))}
+				</ul>
+			</div>
+		</article>
 	);
 }

@@ -1,119 +1,98 @@
 # Atlas
 
-**Wireshark for a handshake.**
+![Atlas Banner](./assets/banner.png)
 
-Most explanations of a cryptographic protocol are prose and static diagrams. Atlas is neither. Point it at a **trace** of a protocol running — a handshake, a ratchet, a session — and it replays the whole thing step by step. Click into a single DH computation. Scrub forward through a conversation and watch forward secrecy actually happen instead of taking it on faith.
+**Wireshark for communication protocols with cryptographic depth.**
 
-Atlas isn't built for one protocol. It's built to visualize *any* cryptographic protocol that can be expressed as a sequence of operations — X3DH, the Double Ratchet, TLS 1.3, Noise, a custom handshake you're designing yourself. Everything protocol-specific lives in a small, swappable **protocol definition**. The core renderer doesn't know or care what protocol it's looking at.
+Most explanations of a cryptographic or network protocol are prose and static diagrams. Atlas is neither. Point it at a **trace** of a protocol running — a handshake, a ratchet, an HTTP exchange, a TCP connection — and it replays the whole thing step by step with rich visual interactivity and automated protocol verification.
 
----
-
-## What it shows
-
-### 1. Sequence diagram
-
-N actor swimlanes — however many the protocol needs (Alice/Bob, client/server, Alice/Server/Bob, whatever). Arrows for each message exchanged. Click any arrow to expand the cryptographic operations behind it: DH computations, KDF derivations, signatures, MAC checks — whatever the protocol declares.
-
-For a Signal-style X3DH handshake, that means seeing exactly how
-
-```
-DH1 = DH(IK_A, SPK_B)
-DH2 = DH(EK_A, IK_B)
-DH3 = DH(EK_A, SPK_B)
-DH4 = DH(EK_A, OPK_B)   ← if a one-time prekey was consumed
-```
-
-feed into the KDF that produces the shared secret — instead of squinting at four DH outputs blurred together in a whitepaper paragraph.
-
-### 2. State timeline
-
-A horizontal scrubber over evolving secret state — for protocols that have it (ratchets, session key rotation, nonce counters, epoch changes). Not every protocol needs this view; the protocol definition decides.
-
-For the Double Ratchet, that means watching root key, sending chain, and receiving chain state evolve message by message, with two visually distinct step types:
-
-- **Symmetric-key ratchet** — cheap, every message, chain key → message key.
-- **DH ratchet** — new DH public key arrives, both chains reset. This is forward secrecy, made visible: scrub past a DH ratchet step and watch a previously-compromised message key stop mattering.
+Atlas isn't built for one protocol. It's built to visualize *any* communication protocol that can be expressed declaratively — X3DH, Double Ratchet, TLS 1.3, TCP 3-way handshake, HTTP request/response flows, Noise, or a custom protocol you're designing yourself. Everything protocol-specific lives in a versioned **protocol definition**.
 
 ---
 
-## Why this exists
+## What It Shows
 
-It's easy to *know* that a handshake combines several DH outputs, or that a ratchet gives forward secrecy. It's much harder to build real intuition for *which* keys combine into what, or the exact moment a compromised key becomes worthless. Atlas exists to make that concrete instead of conceptual — and, when wired into a real implementation, to actually verify a protocol's behavior against its own security claims rather than just asserting them in documentation.
+### 1. Sequence Diagram
+Actor swimlanes (Alice/Bob, Client/Server, Client/Proxy/Server). Directional arrows for each message and self-operation. Click any arrow to expand structured fields, cryptographic parameters (DH computations, HKDF derivations, signature checks), and state changes.
 
----
+### 2. State Timeline
+A horizontal scrubber with Play/Pause auto-playback, timestamp stepping, actor state variable cards, and cumulative event logs.
 
-## How it's built
+### 3. Generic State-Machine View
+Finite state machine nodes and transition triggers, displaying active state highlights, valid/invalid transitions, and terminal/error states.
 
-Nothing about a specific protocol is hardcoded. Adding support for a new one means writing a **protocol definition** — a small declaration of:
+### 4. Dependency Graph
+Visual node-link directed graph illustrating parameter inputs, output references, operation derivations, and compromised value propagation (blast radius analysis).
 
-- `actors` — the swimlanes
-- `operationTypes` — the vocabulary of crypto operations this protocol uses
-- `stepTypes` — categories of state-mutating step, if it has a timeline view
-- `views` — which of sequence diagram / state timeline apply
-
-The bundled reference implementation is **X3DH + Double Ratchet**, built alongside [Halonyx Secura](#), a self-hostable E2EE messaging app implementing the protocol from scratch. It's the worked example — not the ceiling of what Atlas can visualize.
-
-See [`AGENTS.md`](./AGENTS.md) for the full technical contract, trace format, and build phases.
+### 5. Guided Walkthroughs
+Interactive narrated tours for bundled protocols with step navigation, progress tracking, "Why this matters" callouts, and comprehension check quizzes.
 
 ---
 
-## Status
+## Bundled Protocols
 
-- [ ] **Phase 1 — Static replay.** Fully client-side, ships with the bundled X3DH/Double Ratchet example, no live target system required. *(in progress)*
-- [ ] **Phase 2 — Live instrumentation.** Traces generated from a real running system via a minimal JSONL logging shim (any language).
-- [ ] **Phase 3 — Threat model overlay.** Animate compromise scenarios directly on the timeline, per-protocol.
+Atlas comes pre-loaded with complete protocol definitions, valid traces, failure traces, glossaries, and walkthroughs for:
+
+1. **X3DH + Double Ratchet** (Signal E2EE Handshake & Ratchet)
+2. **TCP Three-Way Handshake** (SYN, SYN-ACK, ACK connection establishment)
+3. **HTTP Request & Response** (GET/POST headers, proxy forwarding, status codes)
+4. **TLS 1.3 Handshake** (1-RTT KeyShare, Certificate Verification, Finished HMAC)
+
+---
+
+## Key Features
+
+- **Protocol-Agnostic Core**: Declarative schemas for protocol definitions and JSONL traces.
+- **Trace Diagnostics & Verification**: Multi-pass validator checking timestamps, actor declarations, route invalidities, duplicate IDs, missing references, and state transitions with actionable remediation text.
+- **Threat Model & Scenario Overlays**: Simulate passive eavesdropping, replay attacks, key compromises, and packet loss/delay.
+- **Safe Data Handling**: Built around symbolic references and truncated hashes — never requires real private keys or sensitive plaintexts.
+- **Local-First & Accessible**: Runs 100% in the browser with full keyboard navigation, screen-reader support, high contrast, and drag-and-drop file import/export.
 
 ---
 
 ## Stack
 
-- React + TypeScript + Vite
-- D3.js — custom sequence diagram and timeline rendering, not a Mermaid embed, because per-element interactivity is a core requirement
-- No backend for Phase 1 — deployable as a static site
-- Tokyonight dark theme throughout
+- React 19 + TypeScript + Vite
+- D3.js — custom sequence diagram & visualization rendering
+- Vitest — automated unit testing engine
+- Minimal professional design system (light canvas, warm neutral surfaces, blue accent)
 
 ---
 
-## Running locally
+## Running Locally
 
 ```bash
-git clone <repo-url>
-cd atlas
-npm install
-npm run dev
-```
+# Clone the repository
+git clone https://github.com/ABHIRAM-CREATOR06/Atlas.git
+cd Atlas
 
-No environment variables, no external accounts, no setup beyond `npm install`. Loads the bundled example protocol + trace automatically.
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run unit tests
+npm test
+
+# Build for production
+npm run build
+```
 
 ---
 
-## Trace format
+## Trace Format
 
-JSON Lines. One protocol event per line, validated against whichever protocol definition is loaded:
+JSON Lines format (one event per line):
 
 ```json
-{"t": 0, "actor": "alice", "event": "dh_compute", "label": "DH2", "inputs": ["EK_A", "IK_B"], "output_ref": "dh2_hash"}
-{"t": 1, "actor": "alice", "event": "kdf_derive", "label": "SK", "inputs": ["dh1_hash", "dh2_hash", "dh3_hash"], "output_ref": "sk_hash"}
-{"t": 2, "actor": "alice", "event": "ratchet_step", "kind": "dh", "chain": "root"}
+{"id": "evt_1", "t": 0, "actor": "Alice", "event": "FetchPrekeyBundle", "phase": "key_agreement", "target": "Bob"}
+{"id": "evt_2", "t": 4, "actor": "Alice", "event": "DH", "label": "DH1 (IKa × SPKb)", "inputs": ["ik_alice", "spk_bob"], "output_ref": "dh1_hash"}
+{"id": "evt_3", "t": 8, "actor": "Alice", "event": "KDF", "label": "X3DH Master Secret", "inputs": ["dh1_hash", "dh2_hash"], "output_ref": "sk_master"}
 ```
 
-Trace files never contain real key material — only truncated hashes or symbolic labels. That makes sample traces safe to commit and safe to attach to a paper appendix, for any protocol.
-
 ---
 
-## Instrumenting your own protocol
+## License
 
-1. Write a protocol definition describing your actors, operations, and (if relevant) state-timeline step types.
-2. Drop a minimal logging shim into your implementation — a handful of call sites at the points where it computes a DH output, derives a key, or transitions state — writing JSONL lines matching the trace format above.
-3. Point Atlas at your protocol definition + trace. No core code changes required.
-
-## Known limitations (v1)
-
-- Linear message flow only — out-of-order or skipped messages (which some ratchet-style protocols handle via a skipped-key lookup table) aren't supported yet.
-- Bundled traces are static/scripted by default; live instrumentation is Phase 2.
-
----
-
-## Related
-
-- [Halonyx Secura](#) — the E2EE messaging app the reference protocol definition was built for
+[MIT](LICENSE)
