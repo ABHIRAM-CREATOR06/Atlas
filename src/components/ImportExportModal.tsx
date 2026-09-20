@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, CheckCircle, Download, FileText, Upload, X } from "lucide-react";
+import { AlertTriangle, CheckCircle, Download, FileText, Image, Upload, X } from "lucide-react";
 import type { ProtocolDefinition, TraceDiagnostic } from "../types";
 import { parseTrace } from "../lib/trace";
 
@@ -55,6 +55,54 @@ export function ImportExportModal({
 		const a = document.createElement("a");
 		a.href = url;
 		a.download = `${protocol.id}_definition.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function handleDownloadSvgDiagram() {
+		const svgEl = document.querySelector("svg.diagram");
+		if (!svgEl) {
+			alert("No active sequence diagram available to export.");
+			return;
+		}
+		const serializer = new XMLSerializer();
+		const svgString = serializer.serializeToString(svgEl);
+		const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `${protocol.id}_sequence_diagram.svg`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function handleDownloadTranscript() {
+		const validation = parseTrace(currentTraceJsonl, protocol);
+		const lines: string[] = [
+			`# Transcript: ${protocol.name}`,
+			`Protocol Category: ${protocol.category}`,
+			`Description: ${protocol.description}`,
+			`Generated: ${new Date().toISOString()}`,
+			"",
+			"## Trace Events",
+			"",
+		];
+
+		validation.events.forEach((evt) => {
+			lines.push(`### t=${evt.t} · ${evt.label || evt.event}`);
+			lines.push(`- **Actor**: ${evt.actor}`);
+			if (evt.from) lines.push(`- **Route**: ${evt.from} ➔ ${evt.to}`);
+			if (evt.phase) lines.push(`- **Phase**: ${evt.phase}`);
+			if (evt.inputs && evt.inputs.length > 0) lines.push(`- **Inputs**: \`${evt.inputs.join(", ")}\``);
+			if (evt.outputRef || evt.output_ref) lines.push(`- **Output**: \`${evt.outputRef || evt.output_ref}\``);
+			lines.push("");
+		});
+
+		const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `${protocol.id}_transcript.md`;
 		a.click();
 		URL.revokeObjectURL(url);
 	}
@@ -121,15 +169,21 @@ export function ImportExportModal({
 					) : (
 						<div className="export-container">
 							<p className="modal-desc">
-								Export your current trace workspace as sanitized JSONL, protocol definition JSON, or human-readable explanation transcripts.
+								Export your current trace workspace as sanitized JSONL, protocol definition JSON, SVG diagram, or markdown explanation transcript.
 							</p>
 
 							<div className="export-options-grid">
 								<button className="button" onClick={handleDownloadTrace}>
-									<Download size={16} /> Download Trace (.jsonl)
+									<Download size={16} style={{ marginRight: 6 }} /> Download Trace (.jsonl)
 								</button>
 								<button className="button" onClick={handleDownloadProtocolDef}>
-									<FileText size={16} /> Download Protocol Schema (.json)
+									<FileText size={16} style={{ marginRight: 6 }} /> Download Protocol (.json)
+								</button>
+								<button className="button" onClick={handleDownloadSvgDiagram}>
+									<Image size={16} style={{ marginRight: 6 }} /> Download SVG Diagram
+								</button>
+								<button className="button" onClick={handleDownloadTranscript}>
+									<FileText size={16} style={{ marginRight: 6 }} /> Download Transcript (.md)
 								</button>
 							</div>
 						</div>

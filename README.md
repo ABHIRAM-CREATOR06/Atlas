@@ -50,6 +50,18 @@ Atlas comes pre-loaded with complete protocol definitions, valid traces, failure
 
 ---
 
+## Documentation & References
+
+- [Product Specification](docs/agent.md) — Product vision, non-negotiable principles, and schema specifications.
+- [Design Specification](docs/design.md) — Visual principles, color system, and layout rules.
+- [Design Reference HTML](docs/design.html) — HTML/CSS reference implementation.
+- [Trace Format Specification](docs/trace-format.md) — JSONL trace schema, fields, and privacy standards.
+- [Protocol Definition Guide](docs/protocol-definition.md) — Guide for authoring custom protocol definitions.
+- [Security & Data Safety](docs/security.md) — Privacy policy and zero-key logging rules.
+- [Contributing Guide](CONTRIBUTING.md) — Development setup, testing, and contribution instructions.
+
+---
+
 ## Stack
 
 - React 19 + TypeScript + Vite
