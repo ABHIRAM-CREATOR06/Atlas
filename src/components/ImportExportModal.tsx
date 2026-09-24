@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { AlertTriangle, CheckCircle, Download, FileText, Image, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, CheckCircle, Download, FileText, Image, ShieldCheck, Upload, X } from "lucide-react";
 import type { ProtocolDefinition, TraceDiagnostic } from "../types";
-import { parseTrace } from "../lib/trace";
+import { parseTrace, sanitizeTraceJsonl } from "../lib/trace";
+import { validateProtocolDefinition } from "../lib/schema";
 
 type ImportExportModalProps = {
 	mode: "import" | "export";
@@ -23,28 +24,82 @@ export function ImportExportModal({
 	const [pastedText, setPastedText] = useState("");
 	const [importDiagnostics, setImportDiagnostics] = useState<TraceDiagnostic[]>([]);
 	const [previewValid, setPreviewValid] = useState<boolean | null>(null);
+	const [previewType, setPreviewType] = useState<"trace" | "protocol" | null>(null);
+	const [importedProtoDef, setImportedProtoDef] = useState<ProtocolDefinition | undefined>();
+
+	useEffect(() => {
+		function handleKeyDown(e: KeyboardEvent) {
+			if (e.key === "Escape" && isOpen) {
+				onClose();
+			}
+		}
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isOpen, onClose]);
 
 	if (!isOpen) return null;
 
 	function handleValidatePreview() {
-		if (!pastedText.trim()) return;
-		const res = parseTrace(pastedText, protocol);
+		const trimmed = pastedText.trim();
+		if (!trimmed) return;
+
+		setImportDiagnostics([]);
+		setPreviewValid(null);
+		setPreviewType(null);
+		setImportedProtoDef(undefined);
+
+		// Try parsing as JSON object (Protocol Definition) first
+		if (trimmed.startsWith("{")) {
+			try {
+				const obj = JSON.parse(trimmed);
+				const { valid, diagnostics: protoDiags } = validateProtocolDefinition(obj);
+				if (valid || protoDiags.length === 0 || obj.actors) {
+					setImportedProtoDef(obj as ProtocolDefinition);
+					setImportDiagnostics(protoDiags);
+					setPreviewValid(valid);
+					setPreviewType("protocol");
+					return;
+				}
+			} catch {
+				// Not a valid single JSON object, fall back to JSONL trace parsing below
+			}
+		}
+
+		// Parse as JSONL trace lines
+		const res = parseTrace(trimmed, protocol);
 		setImportDiagnostics(res.diagnostics);
 		setPreviewValid(res.errors.length === 0);
+		setPreviewType("trace");
 	}
 
 	function handleConfirmImport() {
 		if (!pastedText.trim()) return;
-		onImportSuccess(undefined, pastedText);
+
+		if (previewType === "protocol" && importedProtoDef) {
+			onImportSuccess(importedProtoDef, undefined);
+		} else {
+			onImportSuccess(undefined, pastedText);
+		}
 		onClose();
 	}
 
-	function handleDownloadTrace() {
+	function handleDownloadSanitizedTrace() {
+		const sanitizedJsonl = sanitizeTraceJsonl(currentTraceJsonl, protocol);
+		const blob = new Blob([sanitizedJsonl], { type: "application/x-jsonlines" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `${protocol.id}_sanitized_trace.jsonl`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function handleDownloadRawTrace() {
 		const blob = new Blob([currentTraceJsonl], { type: "application/x-jsonlines" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
-		a.download = `${protocol.id}_trace.jsonl`;
+		a.download = `${protocol.id}_raw_trace.jsonl`;
 		a.click();
 		URL.revokeObjectURL(url);
 	}
@@ -84,7 +139,7 @@ export function ImportExportModal({
 			`Description: ${protocol.description}`,
 			`Generated: ${new Date().toISOString()}`,
 			"",
-			"## Trace Events",
+			"## Trace Events (Sanitized)",
 			"",
 		];
 
@@ -108,10 +163,10 @@ export function ImportExportModal({
 	}
 
 	return (
-		<div className="modal-backdrop" onClick={onClose}>
+		<div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
 			<div className="modal-card" onClick={(e) => e.stopPropagation()}>
 				<div className="modal-header">
-					<h3>{mode === "import" ? "Import Protocol or Trace" : "Export Workspace Artifacts"}</h3>
+					<h3 id="modal-title">{mode === "import" ? "Import Protocol or Trace" : "Export Workspace Artifacts"}</h3>
 					<button className="button quiet" onClick={onClose} aria-label="Close dialog">
 						<X size={18} />
 					</button>
@@ -121,15 +176,16 @@ export function ImportExportModal({
 					{mode === "import" ? (
 						<div className="import-container">
 							<p className="modal-desc">
-								Paste a JSONL trace or JSON protocol definition below. Atlas parses and validates all timestamp, reference, and route constraints locally in your browser.
+								Paste a JSONL trace or JSON protocol definition below. Atlas parses and validates all timestamp, reference, actor, and schema constraints locally in your browser.
 							</p>
 
 							<textarea
 								className="modal-textarea"
 								rows={8}
-								placeholder='Paste JSONL trace lines e.g. {"id":"evt_1","t":0,"actor":"Alice","event":"FetchPrekeyBundle"}'
+								placeholder='Paste JSONL trace lines e.g. {"id":"evt_1","t":0,"actor":"Alice","event":"FetchPrekeyBundle"} OR JSON protocol definition object e.g. {"id":"custom-proto","name":"My Protocol","actors":[...]}'
 								value={pastedText}
 								onChange={(e) => setPastedText(e.target.value)}
+								aria-label="Import content textarea"
 							/>
 
 							<div className="modal-actions-row">
@@ -138,7 +194,7 @@ export function ImportExportModal({
 								</button>
 								{previewValid !== null && (
 									<button className="button primary" onClick={handleConfirmImport}>
-										Load Trace into Workspace
+										{previewType === "protocol" ? "Register Custom Protocol" : "Load Trace into Workspace"}
 									</button>
 								)}
 							</div>
@@ -148,20 +204,24 @@ export function ImportExportModal({
 									<strong>
 										{previewValid ? (
 											<span>
-												<CheckCircle size={14} /> Validation Passed
+												<CheckCircle size={14} /> Validation Passed ({previewType === "protocol" ? "Protocol Definition" : "Trace JSONL"})
 											</span>
 										) : (
 											<span>
-												<AlertTriangle size={14} /> Validation Warnings/Errors Found
+												<AlertTriangle size={14} /> Validation Diagnostics ({previewType === "protocol" ? "Protocol Definition" : "Trace JSONL"})
 											</span>
 										)}
 									</strong>
 									<ul className="diag-preview-list">
-										{importDiagnostics.map((d, i) => (
-											<li key={i} className={d.severity}>
-												[{d.severity.toUpperCase()}] {d.message}
-											</li>
-										))}
+										{importDiagnostics.length === 0 ? (
+											<li className="info">[INFO] Clean validation with no errors or warnings.</li>
+										) : (
+											importDiagnostics.map((d, i) => (
+												<li key={i} className={d.severity}>
+													[{d.severity.toUpperCase()}]{d.line ? ` Line ${d.line}:` : ""} {d.message}
+												</li>
+											))
+										)}
 									</ul>
 								</div>
 							)}
@@ -169,21 +229,24 @@ export function ImportExportModal({
 					) : (
 						<div className="export-container">
 							<p className="modal-desc">
-								Export your current trace workspace as sanitized JSONL, protocol definition JSON, SVG diagram, or markdown explanation transcript.
+								Export your current trace workspace as sanitized JSONL (privacy safe), raw JSONL, protocol definition JSON, SVG diagram, or markdown transcript.
 							</p>
 
 							<div className="export-options-grid">
-								<button className="button" onClick={handleDownloadTrace}>
-									<Download size={16} style={{ marginRight: 6 }} /> Download Trace (.jsonl)
+								<button className="button primary" onClick={handleDownloadSanitizedTrace}>
+									<ShieldCheck size={16} style={{ marginRight: 6 }} /> Sanitized Trace (.jsonl)
+								</button>
+								<button className="button" onClick={handleDownloadRawTrace}>
+									<Download size={16} style={{ marginRight: 6 }} /> Raw Trace (.jsonl)
 								</button>
 								<button className="button" onClick={handleDownloadProtocolDef}>
-									<FileText size={16} style={{ marginRight: 6 }} /> Download Protocol (.json)
+									<FileText size={16} style={{ marginRight: 6 }} /> Protocol Definition (.json)
 								</button>
 								<button className="button" onClick={handleDownloadSvgDiagram}>
-									<Image size={16} style={{ marginRight: 6 }} /> Download SVG Diagram
+									<Image size={16} style={{ marginRight: 6 }} /> SVG Diagram
 								</button>
 								<button className="button" onClick={handleDownloadTranscript}>
-									<FileText size={16} style={{ marginRight: 6 }} /> Download Transcript (.md)
+									<FileText size={16} style={{ marginRight: 6 }} /> Markdown Transcript (.md)
 								</button>
 							</div>
 						</div>
@@ -193,3 +256,4 @@ export function ImportExportModal({
 		</div>
 	);
 }
+

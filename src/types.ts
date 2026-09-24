@@ -128,6 +128,17 @@ export type GlossaryEntry = {
 	relatedTerms?: string[];
 };
 
+export type ProtocolComparisonDetails = {
+	layerAndTransport: string;
+	deliveryGuarantees: string;
+	multiplexing: string;
+	statefulness: string;
+	securityModel: string;
+	latencyProfile: string;
+	failureRecovery: string;
+	complexity: string;
+};
+
 export type ProtocolDefinition = {
 	schemaVersion: string;
 	id: string;
@@ -154,12 +165,14 @@ export type ProtocolDefinition = {
 	failureModes?: FailureModeDefinition[];
 	glossary?: GlossaryEntry[];
 	views: ViewId[];
+	comparisonDetails?: ProtocolComparisonDetails;
 };
 
 export type TraceEvent = {
 	schemaVersion?: string;
 	id: string;
 	t: number;
+	sourceLine?: number;
 	wallTime?: string;
 	actor: string;
 	event: string;
@@ -242,7 +255,9 @@ export type ScenarioDefinition = {
 	impactDescription: string;
 	attackerVisibility: string;
 	protectedProperties: string[];
-	affectedEvents: string[];
+	affectedEvents?: string[];
+	affectedEventIds?: string[];
+	compromisedRefs?: string[];
 	modifiedEvents?: TraceEvent[];
 };
 
@@ -259,3 +274,4 @@ export type ProtocolComparison = {
 		protoBValue: string;
 	}[];
 };
+

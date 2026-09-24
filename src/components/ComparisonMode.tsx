@@ -23,13 +23,59 @@ export function ComparisonMode({
 	const protoA = protocols.find((p) => p.id === protoAId) || protocols[0];
 	const protoB = protocols.find((p) => p.id === protoBId) || protocols[1];
 
+	const compA = protoA.comparisonDetails;
+	const compB = protoB.comparisonDetails;
+
+	const matrixRows = [
+		{
+			title: "Layer & Transport",
+			valA: compA?.layerAndTransport || protoA.category,
+			valB: compB?.layerAndTransport || protoB.category,
+		},
+		{
+			title: "Delivery & Ordering Guarantees",
+			valA: compA?.deliveryGuarantees || "In-order delivery per stream / connection",
+			valB: compB?.deliveryGuarantees || "In-order delivery per stream / connection",
+		},
+		{
+			title: "Multiplexing",
+			valA: compA?.multiplexing || "Single connection multiplexing",
+			valB: compB?.multiplexing || "Single connection multiplexing",
+		},
+		{
+			title: "Statefulness & Connection Overhead",
+			valA: compA?.statefulness || "Stateful connection context",
+			valB: compB?.statefulness || "Stateful connection context",
+		},
+		{
+			title: "Security Model & Trust",
+			valA: compA?.securityModel || (protoA.securityProperties?.map((s) => s.name).join(", ") || "Declared security model"),
+			valB: compB?.securityModel || (protoB.securityProperties?.map((s) => s.name).join(", ") || "Declared security model"),
+		},
+		{
+			title: "Latency & RTT Profile",
+			valA: compA?.latencyProfile || "Standard network round trips",
+			valB: compB?.latencyProfile || "Standard network round trips",
+		},
+		{
+			title: "Failure & Recovery Model",
+			valA: compA?.failureRecovery || (protoA.failureModes?.[0]?.description || "Explicit error responses & retry"),
+			valB: compB?.failureRecovery || (protoB.failureModes?.[0]?.description || "Explicit error responses & retry"),
+		},
+		{
+			title: "Operational Complexity",
+			valA: compA?.complexity || `${protoA.difficulty || "Intermediate"} complexity`,
+			valB: compB?.complexity || `${protoB.difficulty || "Intermediate"} complexity`,
+		},
+	];
+
 	return (
 		<section className="comparison-section">
 			<div className="comparison-header">
 				<div>
 					<p className="eyebrow">Protocol Comparison Mode</p>
 					<h2>Side-by-Side Protocol Feature & Trade-Off Analysis</h2>
-					<p>Compare communication architecture, delivery guarantees, security properties, and state overheads.</p>
+					<p>Compare communication architecture, delivery guarantees, security properties, and operational overheads.</p>
 				</div>
 				<button className="button" onClick={onClose}>
 					Back to Catalog
@@ -91,6 +137,29 @@ export function ComparisonMode({
 					</button>
 				</article>
 			</div>
+
+			<div className="comparison-table-card card" style={{ marginTop: 24, padding: 24 }}>
+				<h3>Detailed Technical Matrix: {protoA.name} vs {protoB.name}</h3>
+				<table className="comparison-table" style={{ width: "100%", marginTop: 16, borderCollapse: "collapse" }}>
+					<thead>
+						<tr style={{ textAlign: "left", borderBottom: "2px solid var(--border)" }}>
+							<th style={{ padding: "10px 14px", width: "22%" }}>Dimension</th>
+							<th style={{ padding: "10px 14px", width: "39%" }}>{protoA.name}</th>
+							<th style={{ padding: "10px 14px", width: "39%" }}>{protoB.name}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{matrixRows.map((row, idx) => (
+							<tr key={idx} style={{ borderBottom: "1px solid var(--border-light, #f0ede8)" }}>
+								<td style={{ padding: "12px 14px", fontWeight: 700, fontSize: "0.9rem" }}>{row.title}</td>
+								<td style={{ padding: "12px 14px", fontSize: "0.88rem" }}>{row.valA}</td>
+								<td style={{ padding: "12px 14px", fontSize: "0.88rem" }}>{row.valB}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
 		</section>
 	);
 }
+

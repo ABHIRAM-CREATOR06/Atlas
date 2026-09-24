@@ -15,7 +15,7 @@ import { StateTimeline } from "./components/StateTimeline";
 import { ThreatOverlay } from "./components/ThreatOverlay";
 import { Toolbar } from "./components/Toolbar";
 
-import { protocols } from "./data/protocols";
+import { protocols as bundledProtocols } from "./data/protocols";
 import { scenarios } from "./data/scenarios";
 import { traces } from "./data/traces";
 import { walkthroughs } from "./data/walkthroughs";
@@ -25,11 +25,13 @@ import type { ProtocolDefinition, TraceEvent, ViewId } from "./types";
 
 export function App() {
 	const [appMode, setAppMode] = useState<"workspace" | "catalog" | "compare">("workspace");
-	const [protocolId, setProtocolId] = useState(protocols[0].id);
+	const [customProtocols, setCustomProtocols] = useState<ProtocolDefinition[]>([]);
+	const [protocolId, setProtocolId] = useState(bundledProtocols[0].id);
 	const [compareTargetId, setCompareTargetId] = useState<string | undefined>();
 	const [customTraceJsonl, setCustomTraceJsonl] = useState<string | null>(null);
 	const [activeView, setActiveView] = useState<ViewId>("sequenceDiagram");
-	const [selectedEvent, setSelectedEvent] = useState<TraceEvent | undefined>();
+
+	const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedActor, setSelectedActor] = useState("all");
@@ -38,20 +40,28 @@ export function App() {
 
 	const [modalMode, setModalMode] = useState<"import" | "export" | null>(null);
 
+	const allProtocols = useMemo(
+		() => [...bundledProtocols, ...customProtocols],
+		[customProtocols]
+	);
+
 	const protocol = useMemo(
-		() => protocols.find((item) => item.id === protocolId) ?? protocols[0],
-		[protocolId]
+		() => allProtocols.find((item) => item.id === protocolId) ?? allProtocols[0],
+		[allProtocols, protocolId]
 	);
 
 	const rawTrace = customTraceJsonl ?? traces[protocol.id] ?? "";
+
+	// canonicalEvents: all parsed and validated events in deterministic trace order
 	const validation = useMemo(() => parseTrace(rawTrace, protocol), [rawTrace, protocol]);
+	const canonicalEvents = validation.events;
 
 	const protocolScenarios = scenarios[protocol.id] || [];
 	const activeScenario = protocolScenarios.find((s) => s.id === selectedScenarioId);
 
-	// Filter events based on toolbar search, actor, phase
-	const filteredEvents = useMemo(() => {
-		return validation.events.filter((evt) => {
+	// visibleEvents: presentation-filtered subset according to toolbar controls
+	const visibleEvents = useMemo(() => {
+		return canonicalEvents.filter((evt) => {
 			if (selectedActor !== "all" && evt.actor !== selectedActor && evt.from !== selectedActor && evt.to !== selectedActor) {
 				return false;
 			}
@@ -69,21 +79,33 @@ export function App() {
 			}
 			return true;
 		});
-	}, [validation.events, selectedActor, selectedPhase, searchQuery]);
+	}, [canonicalEvents, selectedActor, selectedPhase, searchQuery]);
 
 	const firstEvent =
-		filteredEvents.find((evt) => isSequenceEvent(protocol, evt)) ?? filteredEvents[0];
-	const currentEvent =
-		selectedEvent && filteredEvents.some((evt) => evt.t === selectedEvent.t || evt.id === selectedEvent.id)
-			? selectedEvent
-			: firstEvent;
+		visibleEvents.find((evt) => isSequenceEvent(protocol, evt)) ?? visibleEvents[0] ?? canonicalEvents[0];
+
+	const currentEvent = useMemo(() => {
+		if (selectedEventId) {
+			const matched = canonicalEvents.find((e) => e.id === selectedEventId);
+			if (matched) return matched;
+		}
+		return firstEvent;
+	}, [selectedEventId, canonicalEvents, firstEvent]);
+
+	function handleSelectEvent(evt?: TraceEvent) {
+		if (evt) {
+			setSelectedEventId(evt.id);
+		} else {
+			setSelectedEventId(null);
+		}
+	}
 
 	function handleSelectProtocol(nextId: string) {
-		const nextProto = protocols.find((item) => item.id === nextId) ?? protocols[0];
+		const nextProto = allProtocols.find((item) => item.id === nextId) ?? allProtocols[0];
 		setProtocolId(nextProto.id);
 		setCustomTraceJsonl(null);
 		setActiveView(nextProto.views[0]);
-		setSelectedEvent(undefined);
+		setSelectedEventId(null);
 		setSelectedScenarioId("none");
 		setSearchQuery("");
 		setSelectedActor("all");
@@ -97,9 +119,19 @@ export function App() {
 	}
 
 	function handleImportSuccess(protoDef?: ProtocolDefinition, traceJsonl?: string) {
-		if (traceJsonl) {
+		if (protoDef) {
+			setCustomProtocols((prev) => {
+				const filtered = prev.filter((p) => p.id !== protoDef.id);
+				return [...filtered, protoDef];
+			});
+			setProtocolId(protoDef.id);
+			if (traceJsonl) setCustomTraceJsonl(traceJsonl);
+			else setCustomTraceJsonl(null);
+			setSelectedEventId(null);
+			setAppMode("workspace");
+		} else if (traceJsonl) {
 			setCustomTraceJsonl(traceJsonl);
-			setSelectedEvent(undefined);
+			setSelectedEventId(null);
 			setAppMode("workspace");
 		}
 	}
@@ -107,7 +139,7 @@ export function App() {
 	return (
 		<main className="app">
 			<Header
-				protocols={protocols}
+				protocols={allProtocols}
 				selectedId={protocol.id}
 				onSelectProtocol={handleSelectProtocol}
 				onOpenCatalog={() => setAppMode("catalog")}
@@ -118,7 +150,7 @@ export function App() {
 
 			{appMode === "catalog" && (
 				<ProtocolCatalog
-					protocols={protocols}
+					protocols={allProtocols}
 					onSelectProtocol={handleSelectProtocol}
 					onSelectCompare={handleOpenCompare}
 				/>
@@ -126,7 +158,7 @@ export function App() {
 
 			{appMode === "compare" && (
 				<ComparisonMode
-					protocols={protocols}
+					protocols={allProtocols}
 					initialProtoAId={compareTargetId || protocol.id}
 					onClose={() => setAppMode("catalog")}
 					onSelectProtocol={handleSelectProtocol}
@@ -135,7 +167,7 @@ export function App() {
 
 			{appMode === "workspace" && (
 				<>
-					<ProtocolSummary protocol={protocol} events={filteredEvents} diagnostics={validation.diagnostics} />
+					<ProtocolSummary protocol={protocol} events={canonicalEvents} diagnostics={validation.diagnostics} />
 
 					{validation.errors.length > 0 && (
 						<section className="error-strip">
@@ -169,44 +201,49 @@ export function App() {
 							{activeView === "sequenceDiagram" && (
 								<SequenceDiagram
 									protocol={protocol}
-									events={filteredEvents}
+									events={visibleEvents}
 									selectedEvent={currentEvent}
-									onSelect={setSelectedEvent}
+									onSelect={handleSelectEvent}
 								/>
 							)}
 
 							{activeView === "stateTimeline" && (
 								<StateTimeline
 									protocol={protocol}
-									events={filteredEvents}
+									events={visibleEvents}
+									canonicalEvents={canonicalEvents}
 									selectedEvent={currentEvent}
-									onSelect={setSelectedEvent}
+									onSelect={handleSelectEvent}
 								/>
 							)}
 
 							{activeView === "stateMachine" && (
 								<StateMachineView
 									protocol={protocol}
-									events={filteredEvents}
+									events={canonicalEvents}
 									selectedEvent={currentEvent}
 								/>
 							)}
 
 							{activeView === "dependencyGraph" && (
 								<DependencyGraph
-									events={filteredEvents}
-									compromisedRefs={activeScenario?.affectedEvents || []}
-									onSelectEvent={setSelectedEvent}
+									events={canonicalEvents}
+									compromisedRefs={activeScenario?.compromisedRefs || []}
+									affectedEventIds={activeScenario?.affectedEventIds || activeScenario?.affectedEvents || []}
+									onSelectEvent={handleSelectEvent}
 								/>
 							)}
 
 							{activeView === "guidedWalkthrough" && (
 								<GuidedWalkthrough
 									walkthrough={walkthroughs[protocol.id]}
-									onStepSelect={(t) => {
-										if (t !== undefined) {
-											const matchingEvt = filteredEvents.find((e) => e.t === t);
-											if (matchingEvt) setSelectedEvent(matchingEvt);
+									onStepSelect={(t, eventId) => {
+										if (eventId) {
+											const evt = canonicalEvents.find((e) => e.id === eventId);
+											if (evt) handleSelectEvent(evt);
+										} else if (t !== undefined) {
+											const evt = canonicalEvents.find((e) => e.t === t);
+											if (evt) handleSelectEvent(evt);
 										}
 									}}
 								/>
@@ -233,10 +270,11 @@ export function App() {
 
 			<footer className="footer">
 				<span>
-					<strong>Atlas Protocol Platform</strong> · 15 Protocol Modules · Replay & Analysis
+					<strong>Atlas Protocol Platform</strong> · {allProtocols.length} Protocol Modules · Replay & Analysis
 				</span>
 				<span>Light theme · Accessible by default · Local-first</span>
 			</footer>
 		</main>
 	);
 }
+

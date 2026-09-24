@@ -5,11 +5,20 @@ import { buildDependencyGraph } from "../lib/dependency";
 type DependencyGraphProps = {
 	events: TraceEvent[];
 	compromisedRefs?: string[];
+	affectedEventIds?: string[];
 	onSelectEvent?: (event: TraceEvent) => void;
 };
 
-export function DependencyGraph({ events, compromisedRefs = [], onSelectEvent }: DependencyGraphProps) {
-	const graph = useMemo(() => buildDependencyGraph(events, compromisedRefs), [events, compromisedRefs]);
+export function DependencyGraph({
+	events,
+	compromisedRefs = [],
+	affectedEventIds = [],
+	onSelectEvent,
+}: DependencyGraphProps) {
+	const graph = useMemo(
+		() => buildDependencyGraph(events, compromisedRefs, affectedEventIds),
+		[events, compromisedRefs, affectedEventIds]
+	);
 
 	return (
 		<article className="card visual">
@@ -31,6 +40,7 @@ export function DependencyGraph({ events, compromisedRefs = [], onSelectEvent }:
 							<span className="node-kind">{node.kind}</span>
 							<strong>{node.label}</strong>
 							{node.t !== undefined && <span className="mono">t={node.t}</span>}
+							{node.isCompromised && <span className="status warning" style={{ fontSize: 10, marginLeft: 4 }}>COMPROMISED</span>}
 						</div>
 					))}
 				</div>
@@ -52,3 +62,4 @@ export function DependencyGraph({ events, compromisedRefs = [], onSelectEvent }:
 		</article>
 	);
 }
+

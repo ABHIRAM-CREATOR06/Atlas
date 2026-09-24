@@ -35,6 +35,16 @@ export function validateProtocolDefinition(data: unknown): { valid: boolean; dia
 		});
 	}
 
+	if (!proto.description || typeof proto.description !== "string") {
+		diagnostics.push({
+			severity: "warning",
+			code: "MISSING_PROTOCOL_DESCRIPTION",
+			field: "description",
+			message: "Protocol definition should include a descriptive 'description' string.",
+			remediation: "Add a 'description' field summarizing the protocol's purpose.",
+		});
+	}
+
 	if (!Array.isArray(proto.actors) || proto.actors.length === 0) {
 		diagnostics.push({
 			severity: "error",
@@ -42,6 +52,42 @@ export function validateProtocolDefinition(data: unknown): { valid: boolean; dia
 			field: "actors",
 			message: "Protocol definition must declare at least one actor in the 'actors' array.",
 			remediation: "Define actors with id, label, and color.",
+		});
+	} else {
+		proto.actors.forEach((act, idx) => {
+			if (!act || typeof act !== "object" || !act.id || !act.label) {
+				diagnostics.push({
+					severity: "error",
+					code: "INVALID_ACTOR_ENTRY",
+					field: `actors[${idx}]`,
+					message: `Actor at index ${idx} is missing required 'id' or 'label'.`,
+					remediation: "Each actor must be an object with id, label, and color strings.",
+				});
+			}
+		});
+	}
+
+	if (!Array.isArray(proto.phases)) {
+		diagnostics.push({
+			severity: "warning",
+			code: "MISSING_PHASES",
+			field: "phases",
+			message: "Protocol definition should declare a 'phases' array.",
+			remediation: "Define phases array e.g. [{ \"id\": \"init\", \"label\": \"Initialization\" }].",
+		});
+	}
+
+	if (proto.transitions && Array.isArray(proto.transitions)) {
+		proto.transitions.forEach((tr, idx) => {
+			if (!tr || !tr.from || !tr.to || !tr.event) {
+				diagnostics.push({
+					severity: "warning",
+					code: "INVALID_TRANSITION",
+					field: `transitions[${idx}]`,
+					message: `Transition at index ${idx} must specify 'from', 'to', and 'event'.`,
+					remediation: "Ensure all transition objects include from, to, and event properties.",
+				});
+			}
 		});
 	}
 
@@ -67,14 +113,14 @@ export function validateTraceEventSchema(data: unknown, lineIndex?: number): { e
 
 	const raw = data as Record<string, unknown>;
 
-	if (raw.t === undefined || typeof raw.t !== "number" || !Number.isFinite(raw.t)) {
+	if (raw.t === undefined || typeof raw.t !== "number" || !Number.isFinite(raw.t) || raw.t < 0) {
 		diagnostics.push({
 			severity: "error",
 			code: "INVALID_TIMESTAMP",
 			line: lineIndex,
 			field: "t",
-			message: `Line ${lineIndex ?? 0}: "t" timestamp must be a valid numeric timestamp.`,
-			remediation: "Provide a numeric 't' value such as 0, 1, 2...",
+			message: `Line ${lineIndex ?? 0}: "t" timestamp must be a non-negative numeric timestamp.`,
+			remediation: "Provide a non-negative numeric 't' value such as 0, 1, 2...",
 		});
 	}
 
@@ -100,11 +146,24 @@ export function validateTraceEventSchema(data: unknown, lineIndex?: number): { e
 		});
 	}
 
-	const id = String(raw.id ?? `evt_${raw.t ?? lineIndex ?? Math.random()}`);
+	let id: string;
+	if (raw.id && typeof raw.id === "string") {
+		id = raw.id;
+	} else {
+		id = `evt_line${lineIndex ?? raw.t ?? 0}`;
+		diagnostics.push({
+			severity: "info",
+			code: "GENERATED_EVENT_ID",
+			line: lineIndex,
+			message: `Line ${lineIndex ?? 0}: Event missing explicit 'id'. Assigned fallback ID "${id}".`,
+			remediation: "Provide a unique 'id' field for each event in the trace.",
+		});
+	}
 
 	const event: TraceEvent = {
 		id,
 		t: Number(raw.t ?? 0),
+		sourceLine: lineIndex,
 		actor: String(raw.actor ?? "unknown"),
 		event: String(raw.event ?? "unknown"),
 		...raw,
@@ -115,3 +174,4 @@ export function validateTraceEventSchema(data: unknown, lineIndex?: number): { e
 		diagnostics,
 	};
 }
+

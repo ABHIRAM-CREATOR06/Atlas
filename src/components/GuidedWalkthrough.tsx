@@ -4,7 +4,7 @@ import type { Walkthrough } from "../types";
 
 type GuidedWalkthroughProps = {
 	walkthrough?: Walkthrough;
-	onStepSelect?: (t?: number) => void;
+	onStepSelect?: (t?: number, eventId?: string) => void;
 };
 
 export function GuidedWalkthrough({ walkthrough, onStepSelect }: GuidedWalkthroughProps) {
@@ -36,8 +36,8 @@ export function GuidedWalkthrough({ walkthrough, onStepSelect }: GuidedWalkthrou
 		setStepIndex(target);
 		setQuizAnswer(null);
 		setShowQuizResult(false);
-		if (steps[target]?.t !== undefined && onStepSelect) {
-			onStepSelect(steps[target].t);
+		if (steps[target] && onStepSelect) {
+			onStepSelect(steps[target].t, steps[target].eventId);
 		}
 	}
 
@@ -115,7 +115,14 @@ export function GuidedWalkthrough({ walkthrough, onStepSelect }: GuidedWalkthrou
 						<ChevronLeft size={16} /> Prev
 					</button>
 
-					<div className="progress" aria-label="Walkthrough progress">
+					<div
+						className="progress"
+						role="progressbar"
+						aria-label="Walkthrough progress"
+						aria-valuenow={progressPercent}
+						aria-valuemin={0}
+						aria-valuemax={100}
+					>
 						<i style={{ width: `${progressPercent}%` }} />
 					</div>
 
@@ -135,3 +142,4 @@ export function GuidedWalkthrough({ walkthrough, onStepSelect }: GuidedWalkthrou
 		</article>
 	);
 }
+

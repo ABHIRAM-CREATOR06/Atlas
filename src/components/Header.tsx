@@ -23,7 +23,13 @@ export function Header({
 }: HeaderProps) {
 	return (
 		<header className="topbar">
-			<div className="brand" onClick={onOpenCatalog} style={{ cursor: "pointer" }}>
+			<button
+				className="brand brand-button"
+				onClick={onOpenCatalog}
+				type="button"
+				aria-label="Atlas Protocol visualizer, open catalog"
+				style={{ background: "none", border: "none", padding: 0, textAlign: "left", font: "inherit", cursor: "pointer" }}
+			>
 				<div className="brand-mark" aria-hidden="true">
 					<ShieldCheck size={24} />
 				</div>
@@ -31,7 +37,7 @@ export function Header({
 					<p className="eyebrow">Atlas protocol visualizer</p>
 					<h1>Protocol replay debugger</h1>
 				</div>
-			</div>
+			</button>
 			<div className="header-actions">
 				<button className="button" onClick={onOpenCatalog} title="Browse Protocol Catalog">
 					<Grid size={15} style={{ marginRight: 6 }} />
@@ -54,3 +60,4 @@ export function Header({
 		</header>
 	);
 }
+

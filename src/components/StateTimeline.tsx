@@ -6,12 +6,20 @@ import { computeReplayState } from "../lib/replay";
 type StateTimelineProps = {
 	protocol: ProtocolDefinition;
 	events: TraceEvent[];
+	canonicalEvents?: TraceEvent[];
 	selectedEvent?: TraceEvent;
 	onSelect: (event: TraceEvent) => void;
 };
 
-export function StateTimeline({ protocol, events, selectedEvent, onSelect }: StateTimelineProps) {
-	const maxTime = Math.max(0, ...events.map((e) => e.t));
+export function StateTimeline({
+	protocol,
+	events,
+	canonicalEvents,
+	selectedEvent,
+	onSelect,
+}: StateTimelineProps) {
+	const allTraceEvents = canonicalEvents || events;
+	const maxTime = Math.max(0, ...allTraceEvents.map((e) => e.t));
 	const [currentTime, setCurrentTime] = useState(selectedEvent?.t ?? 0);
 	const [isPlaying, setIsPlaying] = useState(false);
 
@@ -30,23 +38,23 @@ export function StateTimeline({ protocol, events, selectedEvent, onSelect }: Sta
 						setIsPlaying(false);
 						return prev;
 					}
-					const nextEvent = events.find((e) => e.t > prev);
+					const nextEvent = allTraceEvents.find((e) => e.t > prev);
 					return nextEvent ? nextEvent.t : prev + 1;
 				});
 			}, 1200);
 		}
 		return () => clearInterval(timer);
-	}, [events, isPlaying, maxTime]);
+	}, [allTraceEvents, isPlaying, maxTime]);
 
-	const replayState = computeReplayState(events, protocol, currentTime);
+	const replayState = computeReplayState(allTraceEvents, protocol, currentTime);
 
 	function handleStep(delta: number) {
-		const sortedTs = Array.from(new Set(events.map((e) => e.t))).sort((a, b) => a - b);
+		const sortedTs = Array.from(new Set(allTraceEvents.map((e) => e.t))).sort((a, b) => a - b);
 		const currentIndex = sortedTs.indexOf(currentTime);
 		const targetIndex = Math.max(0, Math.min(sortedTs.length - 1, currentIndex + delta));
 		const targetTime = sortedTs[targetIndex] ?? currentTime;
 		setCurrentTime(targetTime);
-		const matchingEvt = events.find((e) => e.t === targetTime);
+		const matchingEvt = allTraceEvents.find((e) => e.t === targetTime);
 		if (matchingEvt) {
 			onSelect(matchingEvt);
 		}
@@ -87,7 +95,7 @@ export function StateTimeline({ protocol, events, selectedEvent, onSelect }: Sta
 					onChange={(e) => {
 						const val = Number(e.target.value);
 						setCurrentTime(val);
-						const matchingEvt = events.find((evt) => evt.t === val);
+						const matchingEvt = allTraceEvents.find((evt) => evt.t === val);
 						if (matchingEvt) {
 							onSelect(matchingEvt);
 						}
@@ -118,8 +126,16 @@ export function StateTimeline({ protocol, events, selectedEvent, onSelect }: Sta
 						.map((e) => (
 							<li
 								key={e.id}
-								className={`timeline-event-item ${e.t === currentTime ? "selected" : ""}`}
+								className={`timeline-event-item ${e.id === selectedEvent?.id || e.t === currentTime ? "selected" : ""}`}
+								role="button"
+								tabIndex={0}
 								onClick={() => onSelect(e)}
+								onKeyDown={(evt) => {
+									if (evt.key === "Enter" || evt.key === " ") {
+										evt.preventDefault();
+										onSelect(e);
+									}
+								}}
 							>
 								<span className="mono">t={e.t}</span>
 								<strong>[{e.actor}]</strong> {e.label || e.event}
@@ -130,3 +146,4 @@ export function StateTimeline({ protocol, events, selectedEvent, onSelect }: Sta
 		</article>
 	);
 }
+

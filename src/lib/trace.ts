@@ -26,6 +26,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			const { event, diagnostics: schemaDiags } = validateTraceEventSchema(parsed, lineNumber);
 			diagnostics.push(...schemaDiags);
 			if (event) {
+				event.sourceLine = lineNumber;
 				events.push(event);
 			}
 		} catch {
@@ -39,8 +40,8 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 		}
 	}
 
-	// Sort events by timestamp t
-	events.sort((a, b) => a.t - b.t);
+	// Stable sort events by timestamp t, preserving source file line order for concurrent timestamps
+	events.sort((a, b) => a.t - b.t || (a.sourceLine ?? 0) - (b.sourceLine ?? 0));
 
 	// Multi-pass trace verification & semantic validation
 	const seenEventIds = new Set<string>();
@@ -51,8 +52,8 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 	// Seed state variables as known references if provided
 	(protocol.stateVariables || []).forEach((sv) => producedRefs.add(sv.id));
 
-	events.forEach((evt, idx) => {
-		const lineNum = idx + 1;
+	events.forEach((evt) => {
+		const lineNum = evt.sourceLine;
 
 		// 1. Duplicate event ID check
 		if (evt.id) {
@@ -60,6 +61,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 				diagnostics.push({
 					severity: "warning",
 					code: "DUPLICATE_EVENT_ID",
+					line: lineNum,
 					eventId: evt.id,
 					t: evt.t,
 					message: `Duplicate event ID "${evt.id}" observed at t=${evt.t}.`,
@@ -70,12 +72,14 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			}
 		}
 
+
 		// 2. Duplicate message ID check
 		if (evt.messageId) {
 			if (seenMessageIds.has(evt.messageId)) {
 				diagnostics.push({
 					severity: "warning",
 					code: "DUPLICATE_MESSAGE_ID",
+					line: lineNum,
 					eventId: evt.id,
 					t: evt.t,
 					message: `Duplicate message ID "${evt.messageId}" at t=${evt.t}.`,
@@ -91,6 +95,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			diagnostics.push({
 				severity: "info",
 				code: "CONCURRENT_TIMESTAMPS",
+				line: lineNum,
 				t: evt.t,
 				eventId: evt.id,
 				message: `Multiple events share the timestamp t=${evt.t}.`,
@@ -105,6 +110,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			diagnostics.push({
 				severity: "error",
 				code: "UNKNOWN_ACTOR",
+				line: lineNum,
 				t: evt.t,
 				eventId: evt.id,
 				field: "actor",
@@ -118,6 +124,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			diagnostics.push({
 				severity: "error",
 				code: "UNKNOWN_SOURCE_ACTOR",
+				line: lineNum,
 				t: evt.t,
 				eventId: evt.id,
 				field: "from",
@@ -129,6 +136,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			diagnostics.push({
 				severity: "error",
 				code: "UNKNOWN_DESTINATION_ACTOR",
+				line: lineNum,
 				t: evt.t,
 				eventId: evt.id,
 				field: "to",
@@ -142,6 +150,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			diagnostics.push({
 				severity: "error",
 				code: "UNDECLARED_EVENT_TYPE",
+				line: lineNum,
 				t: evt.t,
 				eventId: evt.id,
 				field: "event",
@@ -155,6 +164,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 			diagnostics.push({
 				severity: "warning",
 				code: "INVALID_PHASE",
+				line: lineNum,
 				t: evt.t,
 				eventId: evt.id,
 				field: "phase",
@@ -170,6 +180,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 				diagnostics.push({
 					severity: "warning",
 					code: "UNPRODUCED_REFERENCE",
+					line: lineNum,
 					t: evt.t,
 					eventId: evt.id,
 					field: "inputs",
@@ -178,6 +189,7 @@ export function parseTrace(jsonl: string, protocol: ProtocolDefinition): Validat
 				});
 			}
 		});
+
 
 		// Record newly produced outputs
 		const outRef = evt.outputRef || evt.output_ref || (evt.metadata?.outputRef as string);
@@ -250,3 +262,84 @@ export function displayValue(value: unknown): string {
 	}
 	return String(value);
 }
+
+const SAFE_EVENT_KEYS = new Set([
+	"schemaVersion",
+	"id",
+	"t",
+	"sourceLine",
+	"wallTime",
+	"actor",
+	"event",
+	"phase",
+	"from",
+	"to",
+	"messageType",
+	"messageId",
+	"correlationId",
+	"parentId",
+	"sequence",
+	"transport",
+	"status",
+	"deliveredAt",
+	"label",
+	"inputs",
+	"outputRef",
+	"output_ref",
+	"payloadRef",
+	"encoding",
+	"sizeBytes",
+	"kind",
+	"chain",
+	"state",
+	"explanation",
+]);
+
+const SENSITIVE_KEY_PATTERN = /key|secret|token|password|priv|private|plaintext|credential|auth/i;
+
+function sanitizeValue(key: string, val: unknown): unknown {
+	if (SENSITIVE_KEY_PATTERN.test(key)) {
+		return "[REDACTED]";
+	}
+	if (typeof val === "object" && val !== null) {
+		if (Array.isArray(val)) {
+			return val.map((item, idx) => (typeof item === "string" && SENSITIVE_KEY_PATTERN.test(item) ? "[REDACTED]" : item));
+		}
+		const obj: Record<string, unknown> = {};
+		Object.entries(val as Record<string, unknown>).forEach(([k, v]) => {
+			obj[k] = sanitizeValue(k, v);
+		});
+		return obj;
+	}
+	return val;
+}
+
+export function sanitizeTraceEvent(event: TraceEvent): TraceEvent {
+	const sanitized: Record<string, unknown> = {};
+
+	Object.entries(event).forEach(([k, v]) => {
+		if (SAFE_EVENT_KEYS.has(k)) {
+			if (k === "state" || k === "explanation") {
+				sanitized[k] = sanitizeValue(k, v);
+			} else {
+				sanitized[k] = v;
+			}
+		} else if (k === "fields" || k === "metadata") {
+			sanitized[k] = sanitizeValue(k, v);
+		} else {
+			// Unknown top-level custom field: redact if sensitive, omit otherwise
+			if (SENSITIVE_KEY_PATTERN.test(k)) {
+				sanitized[k] = "[REDACTED]";
+			}
+		}
+	});
+
+	return sanitized as TraceEvent;
+}
+
+export function sanitizeTraceJsonl(jsonl: string, protocol: ProtocolDefinition): string {
+	const parsed = parseTrace(jsonl, protocol);
+	const sanitizedEvents = parsed.events.map((e) => sanitizeTraceEvent(e));
+	return sanitizedEvents.map((e) => JSON.stringify(e)).join("\n");
+}
+
