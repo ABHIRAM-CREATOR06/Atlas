@@ -55,3 +55,4 @@ target/
 
 # Generated files
 coverage/
+docs/refinement.md
