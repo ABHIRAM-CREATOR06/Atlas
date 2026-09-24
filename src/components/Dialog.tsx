@@ -33,6 +33,11 @@ export const Dialog: React.FC<DialogProps> = ({
 		previousActiveElement.current = document.activeElement as HTMLElement;
 
 		const dialogNode = dialogRef.current;
+		const appRoot = document.getElementById("root");
+		const previousInert = appRoot?.inert ?? false;
+		const previousOverflow = document.body.style.overflow;
+		if (appRoot) appRoot.inert = true;
+		document.body.style.overflow = "hidden";
 		if (dialogNode) {
 			// Focus initial element or first focusable element
 			if (initialFocusRef && initialFocusRef.current) {
@@ -62,7 +67,7 @@ export const Dialog: React.FC<DialogProps> = ({
 			if (e.key === "Tab" && dialogNode) {
 				const focusables = Array.from(
 					dialogNode.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-				).filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+				).filter((el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true" && el.offsetParent !== null);
 
 				if (focusables.length === 0) {
 					e.preventDefault();
@@ -90,12 +95,14 @@ export const Dialog: React.FC<DialogProps> = ({
 
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown, true);
+			if (appRoot) appRoot.inert = previousInert;
+			document.body.style.overflow = previousOverflow;
 
 			// Restore focus on close
 			if (previousActiveElement.current && typeof previousActiveElement.current.focus === "function") {
 				// Use setTimeout to ensure unmount completes
 				setTimeout(() => {
-					if (document.body.contains(previousActiveElement.current)) {
+					if (previousActiveElement.current?.isConnected && !previousActiveElement.current.closest("[inert]")) {
 						previousActiveElement.current?.focus();
 					}
 				}, 0);

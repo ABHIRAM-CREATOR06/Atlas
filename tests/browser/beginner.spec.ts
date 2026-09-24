@@ -14,10 +14,10 @@ test.describe("Beginner Protocol Journey", () => {
 		await page.selectOption('[data-testid="catalog-difficulty-filter"]', "Beginner");
 
 		// 4. Open TCP protocol
-		await page.click('[data-testid="catalog-explore-tcp"]');
+		await page.click('[data-testid="catalog-explore-tcp-3way"]');
 
 		// 5. Confirm summary shows TCP
-		await expect(page.locator("h2.proto-title")).toContainText("TCP");
+		await expect(page.locator("#protocol-title")).toContainText("TCP");
 
 		// 6. Select sequence diagram
 		await page.click('[data-testid="workspace-view-sequence"]');
@@ -34,7 +34,7 @@ test.describe("Beginner Protocol Journey", () => {
 
 		// 9. Switch to timeline view
 		await page.click('[data-testid="workspace-view-timeline"]');
-		await expect(page.locator(".timeline-slider-card")).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Replay & state evolution" })).toBeVisible();
 
 		// 10. Switch to state machine view
 		await page.click('[data-testid="workspace-view-state-machine"]');

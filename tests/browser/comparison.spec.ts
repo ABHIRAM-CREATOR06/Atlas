@@ -6,7 +6,7 @@ test.describe("Comparison Journey", () => {
 
 		// Open comparison mode
 		await page.click('[data-testid="compare-open"]');
-		await expect(page.locator(".comparison-card")).toBeVisible();
+		await expect(page.locator(".comparison-table-card")).toBeVisible();
 
 		// Verify comparison select elements exist
 		const selectors = page.locator(".comparison-picker select");

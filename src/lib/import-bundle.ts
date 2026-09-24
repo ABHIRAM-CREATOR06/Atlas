@@ -42,7 +42,7 @@ export function parseAndValidateImport(
 		};
 	}
 
-	if (Buffer.byteLength(trimmed, "utf8") > MAX_JSON_SIZE_BYTES) {
+	if (new TextEncoder().encode(trimmed).byteLength > MAX_JSON_SIZE_BYTES) {
 		return {
 			valid: false,
 			kind: "trace",

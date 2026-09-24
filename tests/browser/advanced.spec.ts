@@ -6,13 +6,13 @@ test.describe("Advanced Protocol Journey", () => {
 
 		// Open catalog and select X3DH / Double Ratchet protocol
 		await page.click('[data-testid="catalog-open"]');
-		await page.click('[data-testid="catalog-explore-x3dh-double-ratchet"]');
+		await page.click('[data-testid="catalog-explore-x3dh-ratchet"]');
 
-		await expect(page.locator("h2.proto-title")).toContainText("X3DH");
+		await expect(page.locator("#protocol-title")).toContainText("X3DH");
 
 		// Open dependency graph view
 		await page.click('[data-testid="workspace-view-dependency"]');
-		await expect(page.locator(".dependency-graph-card")).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Dependency graph" })).toBeVisible();
 
 		// Activate a compromise scenario if available
 		const scenarioPicker = page.locator('[data-testid="scenario-picker"]');
