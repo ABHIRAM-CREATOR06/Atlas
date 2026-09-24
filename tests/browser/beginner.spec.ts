@@ -38,6 +38,6 @@ test.describe("Beginner Protocol Journey", () => {
 
 		// 10. Switch to state machine view
 		await page.click('[data-testid="workspace-view-state-machine"]');
-		await expect(page.locator("svg.state-diagram")).toBeVisible();
+		await expect(page.getByTestId("state-machine-view")).toBeVisible();
 	});
 });

@@ -12,7 +12,7 @@ test.describe("Advanced Protocol Journey", () => {
 
 		// Open dependency graph view
 		await page.click('[data-testid="workspace-view-dependency"]');
-		await expect(page.getByRole("heading", { name: "Dependency graph" })).toBeVisible();
+		await expect(page.getByTestId("dependency-graph-view")).toBeVisible();
 
 		// Activate a compromise scenario if available
 		const scenarioPicker = page.locator('[data-testid="scenario-picker"]');
@@ -22,6 +22,6 @@ test.describe("Advanced Protocol Journey", () => {
 
 		// Open walkthrough view
 		await page.click('[data-testid="workspace-view-walkthrough"]');
-		await expect(page.locator(".walkthrough-card")).toBeVisible();
+		await expect(page.getByTestId("guided-walkthrough-view")).toBeVisible();
 	});
 });

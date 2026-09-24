@@ -14,7 +14,7 @@ export function GuidedWalkthrough({ walkthrough, onStepSelect }: GuidedWalkthrou
 
 	if (!walkthrough || walkthrough.steps.length === 0) {
 		return (
-			<article className="card visual">
+			<article className="card visual" data-testid="guided-walkthrough-view">
 				<div className="panel-heading">
 					<div>
 						<p className="eyebrow">Guided walkthrough</p>
@@ -42,7 +42,7 @@ export function GuidedWalkthrough({ walkthrough, onStepSelect }: GuidedWalkthrou
 	}
 
 	return (
-		<article className="card visual">
+		<article className="card visual" data-testid="guided-walkthrough-view">
 			<div className="panel-heading">
 				<div>
 					<p className="eyebrow">Guided walkthrough</p>
@@ -142,4 +142,3 @@ export function GuidedWalkthrough({ walkthrough, onStepSelect }: GuidedWalkthrou
 		</article>
 	);
 }
-

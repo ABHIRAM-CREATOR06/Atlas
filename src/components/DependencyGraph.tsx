@@ -21,7 +21,7 @@ export function DependencyGraph({
 	);
 
 	return (
-		<article className="card visual">
+		<article className="card visual" data-testid="dependency-graph-view">
 			<div className="panel-heading">
 				<div>
 					<p className="eyebrow">Dependency graph</p>
@@ -62,4 +62,3 @@ export function DependencyGraph({
 		</article>
 	);
 }
-

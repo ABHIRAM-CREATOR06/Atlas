@@ -20,7 +20,7 @@ export function StateMachineView({ protocol, events, selectedEvent }: StateMachi
 	);
 
 	return (
-		<article className="card visual">
+		<article className="card visual" data-testid="state-machine-view">
 			<div className="panel-heading">
 				<div>
 					<p className="eyebrow">State machine view</p>
@@ -91,4 +91,3 @@ export function StateMachineView({ protocol, events, selectedEvent }: StateMachi
 		</article>
 	);
 }
-

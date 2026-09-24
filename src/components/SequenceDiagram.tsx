@@ -235,7 +235,7 @@ export function SequenceDiagram({ protocol, events, selectedEvent, onSelect }: S
 			</div>
 
 			<div className="diagram-wrap">
-				<svg ref={svgRef} className="diagram" role="img" aria-label={`${protocol.name} sequence diagram`} />
+				<svg ref={svgRef} className="diagram" role="group" aria-label={`${protocol.name} sequence diagram`} />
 			</div>
 		</article>
 	);
