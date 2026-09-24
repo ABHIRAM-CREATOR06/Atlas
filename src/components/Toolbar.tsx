@@ -37,6 +37,7 @@ export function Toolbar({
 					<button
 						className={`tab ${activeView === "sequenceDiagram" ? "active" : ""}`}
 						onClick={() => onSelectView("sequenceDiagram")}
+						data-testid="workspace-view-sequence"
 					>
 						<Braces size={15} />
 						Sequence
@@ -46,6 +47,7 @@ export function Toolbar({
 					<button
 						className={`tab ${activeView === "stateTimeline" ? "active" : ""}`}
 						onClick={() => onSelectView("stateTimeline")}
+						data-testid="workspace-view-timeline"
 					>
 						<Activity size={15} />
 						Timeline
@@ -55,6 +57,7 @@ export function Toolbar({
 					<button
 						className={`tab ${activeView === "stateMachine" ? "active" : ""}`}
 						onClick={() => onSelectView("stateMachine")}
+						data-testid="workspace-view-state-machine"
 					>
 						<GitMerge size={15} />
 						State Machine
@@ -64,6 +67,7 @@ export function Toolbar({
 					<button
 						className={`tab ${activeView === "dependencyGraph" ? "active" : ""}`}
 						onClick={() => onSelectView("dependencyGraph")}
+						data-testid="workspace-view-dependency"
 					>
 						<Sliders size={15} />
 						Dependencies
@@ -73,6 +77,7 @@ export function Toolbar({
 					<button
 						className={`tab ${activeView === "guidedWalkthrough" ? "active" : ""}`}
 						onClick={() => onSelectView("guidedWalkthrough")}
+						data-testid="workspace-view-walkthrough"
 					>
 						<BookOpen size={15} />
 						Walkthrough
@@ -123,6 +128,7 @@ export function Toolbar({
 						aria-label="Select threat scenario"
 						value={selectedScenarioId}
 						onChange={(e) => onSelectScenario(e.target.value)}
+						data-testid="scenario-picker"
 					>
 						{scenariosList.map((sc) => (
 							<option key={sc.id} value={sc.id}>

@@ -47,7 +47,7 @@ export function Inspector({ protocol, event, diagnostics = [] }: InspectorProps)
 	const fieldsList = msgDef?.fields || opDef?.fields || stepDef?.fields || [];
 
 	return (
-		<aside className="card inspector" aria-labelledby="inspector-title">
+		<aside className="card inspector" aria-labelledby="inspector-title" data-testid="inspector-panel">
 			<div className="inspector-head">
 				<div className="event-icon" aria-hidden="true">
 					<KeyRound size={18} />

@@ -39,20 +39,20 @@ export function Header({
 				</div>
 			</button>
 			<div className="header-actions">
-				<button className="button" onClick={onOpenCatalog} title="Browse Protocol Catalog">
+				<button className="button" onClick={onOpenCatalog} title="Browse Protocol Catalog" data-testid="catalog-open">
 					<Grid size={15} style={{ marginRight: 6 }} />
 					Catalog
 				</button>
-				<button className="button" onClick={onOpenCompare} title="Side-by-side Protocol Comparison">
+				<button className="button" onClick={onOpenCompare} title="Side-by-side Protocol Comparison" data-testid="compare-open">
 					<Compass size={15} style={{ marginRight: 6 }} />
 					Compare
 				</button>
 				<ProtocolPicker protocols={protocols} selectedId={selectedId} onSelect={onSelectProtocol} />
-				<button className="button" onClick={onOpenImport} aria-label="Import protocol or trace">
+				<button className="button" onClick={onOpenImport} aria-label="Import protocol or trace" data-testid="import-open">
 					<Upload size={15} style={{ marginRight: 6 }} />
 					Import
 				</button>
-				<button className="button primary" onClick={onOpenExport} aria-label="Export trace or diagram">
+				<button className="button primary" onClick={onOpenExport} aria-label="Export trace or diagram" data-testid="export-open">
 					<Download size={15} style={{ marginRight: 6 }} />
 					Export
 				</button>

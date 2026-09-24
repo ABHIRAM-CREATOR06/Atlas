@@ -4,7 +4,11 @@
 		"dev": "vite --host 127.0.0.1",
 		"build": "tsc && vite build",
 		"preview": "vite preview --host 127.0.0.1",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:browser": "playwright test",
+		"test:browser:ui": "playwright test --ui",
+		"test:browser:debug": "playwright test --debug",
+		"test:a11y": "playwright test tests/browser/accessibility"
 	},
 	"dependencies": {
 		"d3": "^7.9.0",
@@ -13,6 +17,8 @@
 		"react-dom": "^19.0.0"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.10.1",
+		"@playwright/test": "^1.50.1",
 		"@types/d3": "^7.4.3",
 		"@types/react": "^19.0.1",
 		"@types/react-dom": "^19.0.2",

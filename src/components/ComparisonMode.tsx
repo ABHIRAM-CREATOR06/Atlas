@@ -82,7 +82,7 @@ export function ComparisonMode({
 				</button>
 			</div>
 
-			<div className="comparison-selectors">
+			<div className="comparison-selectors comparison-picker">
 				<div className="selector-box">
 					<label>Protocol A</label>
 					<select value={protoAId} onChange={(e) => setProtoAId(e.target.value)}>

@@ -65,6 +65,7 @@ export function ProtocolCatalog({ protocols, onSelectProtocol, onSelectCompare }
 						placeholder="Search by name, tag, or technology (e.g. UDP, TLS, OAuth)..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
+						data-testid="catalog-search"
 					/>
 				</div>
 
@@ -85,6 +86,7 @@ export function ProtocolCatalog({ protocols, onSelectProtocol, onSelectCompare }
 					aria-label="Filter by difficulty"
 					value={selectedDifficulty}
 					onChange={(e) => setSelectedDifficulty(e.target.value)}
+					data-testid="catalog-difficulty-filter"
 				>
 					<option value="all">All Difficulties</option>
 					<option value="Beginner">Beginner</option>
@@ -131,10 +133,10 @@ export function ProtocolCatalog({ protocols, onSelectProtocol, onSelectCompare }
 						)}
 
 						<div className="catalog-card-footer">
-							<button className="button primary" onClick={() => onSelectProtocol(proto.id)}>
+							<button className="button primary" onClick={() => onSelectProtocol(proto.id)} data-testid={`catalog-explore-${proto.id}`}>
 								<Zap size={14} style={{ marginRight: 6 }} /> Explore Protocol
 							</button>
-							<button className="button" onClick={() => onSelectCompare(proto.id)}>
+							<button className="button" onClick={() => onSelectCompare(proto.id)} data-testid={`catalog-compare-${proto.id}`}>
 								<Compass size={14} style={{ marginRight: 6 }} /> Compare
 							</button>
 						</div>

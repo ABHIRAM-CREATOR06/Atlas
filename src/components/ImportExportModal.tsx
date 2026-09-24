@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle, Download, FileText, Image, ShieldCheck, Upload, X } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, CheckCircle, Download, FileText, Image, ShieldCheck, X } from "lucide-react";
 import type { ProtocolDefinition, TraceDiagnostic } from "../types";
 import { parseTrace, sanitizeTraceJsonl } from "../lib/trace";
 import { validateProtocolDefinition } from "../lib/schema";
+import { Dialog } from "./Dialog";
 
 type ImportExportModalProps = {
 	mode: "import" | "export";
@@ -26,18 +27,6 @@ export function ImportExportModal({
 	const [previewValid, setPreviewValid] = useState<boolean | null>(null);
 	const [previewType, setPreviewType] = useState<"trace" | "protocol" | null>(null);
 	const [importedProtoDef, setImportedProtoDef] = useState<ProtocolDefinition | undefined>();
-
-	useEffect(() => {
-		function handleKeyDown(e: KeyboardEvent) {
-			if (e.key === "Escape" && isOpen) {
-				onClose();
-			}
-		}
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [isOpen, onClose]);
-
-	if (!isOpen) return null;
 
 	function handleValidatePreview() {
 		const trimmed = pastedText.trim();
@@ -162,12 +151,15 @@ export function ImportExportModal({
 		URL.revokeObjectURL(url);
 	}
 
+	const modalTitleId = "import-export-modal-title";
+	const modalDescId = "import-export-modal-desc";
+
 	return (
-		<div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-			<div className="modal-card" onClick={(e) => e.stopPropagation()}>
+		<Dialog open={isOpen} titleId={modalTitleId} descriptionId={modalDescId} onClose={onClose}>
+			<div className="modal-card">
 				<div className="modal-header">
-					<h3 id="modal-title">{mode === "import" ? "Import Protocol or Trace" : "Export Workspace Artifacts"}</h3>
-					<button className="button quiet" onClick={onClose} aria-label="Close dialog">
+					<h3 id={modalTitleId}>{mode === "import" ? "Import Protocol or Trace" : "Export Workspace Artifacts"}</h3>
+					<button className="button quiet" onClick={onClose} aria-label="Close dialog" data-testid="modal-close">
 						<X size={18} />
 					</button>
 				</div>
@@ -175,7 +167,7 @@ export function ImportExportModal({
 				<div className="modal-body">
 					{mode === "import" ? (
 						<div className="import-container">
-							<p className="modal-desc">
+							<p id={modalDescId} className="modal-desc">
 								Paste a JSONL trace or JSON protocol definition below. Atlas parses and validates all timestamp, reference, actor, and schema constraints locally in your browser.
 							</p>
 
@@ -186,14 +178,15 @@ export function ImportExportModal({
 								value={pastedText}
 								onChange={(e) => setPastedText(e.target.value)}
 								aria-label="Import content textarea"
+								data-testid="trace-input"
 							/>
 
 							<div className="modal-actions-row">
-								<button className="button" onClick={handleValidatePreview}>
+								<button className="button" onClick={handleValidatePreview} data-testid="validate-trace">
 									Preview & Validate
 								</button>
 								{previewValid !== null && (
-									<button className="button primary" onClick={handleConfirmImport}>
+									<button className="button primary" onClick={handleConfirmImport} data-testid="load-trace">
 										{previewType === "protocol" ? "Register Custom Protocol" : "Load Trace into Workspace"}
 									</button>
 								)}
@@ -228,24 +221,24 @@ export function ImportExportModal({
 						</div>
 					) : (
 						<div className="export-container">
-							<p className="modal-desc">
+							<p id={modalDescId} className="modal-desc">
 								Export your current trace workspace as sanitized JSONL (privacy safe), raw JSONL, protocol definition JSON, SVG diagram, or markdown transcript.
 							</p>
 
 							<div className="export-options-grid">
-								<button className="button primary" onClick={handleDownloadSanitizedTrace}>
+								<button className="button primary" onClick={handleDownloadSanitizedTrace} data-testid="export-sanitized-trace">
 									<ShieldCheck size={16} style={{ marginRight: 6 }} /> Sanitized Trace (.jsonl)
 								</button>
-								<button className="button" onClick={handleDownloadRawTrace}>
+								<button className="button" onClick={handleDownloadRawTrace} data-testid="export-raw-trace">
 									<Download size={16} style={{ marginRight: 6 }} /> Raw Trace (.jsonl)
 								</button>
-								<button className="button" onClick={handleDownloadProtocolDef}>
+								<button className="button" onClick={handleDownloadProtocolDef} data-testid="export-protocol-def">
 									<FileText size={16} style={{ marginRight: 6 }} /> Protocol Definition (.json)
 								</button>
-								<button className="button" onClick={handleDownloadSvgDiagram}>
+								<button className="button" onClick={handleDownloadSvgDiagram} data-testid="export-svg-diagram">
 									<Image size={16} style={{ marginRight: 6 }} /> SVG Diagram
 								</button>
-								<button className="button" onClick={handleDownloadTranscript}>
+								<button className="button" onClick={handleDownloadTranscript} data-testid="export-transcript">
 									<FileText size={16} style={{ marginRight: 6 }} /> Markdown Transcript (.md)
 								</button>
 							</div>
@@ -253,7 +246,8 @@ export function ImportExportModal({
 					)}
 				</div>
 			</div>
-		</div>
+		</Dialog>
 	);
 }
+
 

@@ -14,7 +14,7 @@ export function ProtocolPicker({ protocols, selectedId, onSelect }: ProtocolPick
 				<FileJson size={16} />
 				Protocol
 			</span>
-			<select value={selectedId} onChange={(event) => onSelect(event.target.value)}>
+			<select value={selectedId} onChange={(event) => onSelect(event.target.value)} data-testid="protocol-picker">
 				{protocols.map((protocol) => (
 					<option key={protocol.id} value={protocol.id}>
 						{protocol.name}

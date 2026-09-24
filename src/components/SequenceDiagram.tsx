@@ -137,6 +137,7 @@ export function SequenceDiagram({ protocol, events, selectedEvent, onSelect }: S
 				.attr("tabindex", 0)
 				.attr("role", "button")
 				.attr("aria-label", `Event t=${event.t}: ${event.label || event.event}`)
+				.attr("data-testid", `event-row-${event.id}`)
 				.style("cursor", "pointer");
 
 			const markerId = `url(#arrow-${labelColor.replace("#", "")})`;

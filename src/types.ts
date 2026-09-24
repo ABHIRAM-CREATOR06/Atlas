@@ -139,6 +139,34 @@ export type ProtocolComparisonDetails = {
 	complexity: string;
 };
 
+export type ConformanceRule = {
+	id: string;
+	name: string;
+	description: string;
+	severity: "error" | "warning" | "info";
+	appliesTo?: string[];
+};
+
+export type ProtocolConformance = {
+	ruleIds: string[];
+};
+
+export type ProtocolComparisonProfile = {
+	layer: string;
+	transports: string[];
+	deliveryGuarantee: string;
+	orderingGuarantee: string;
+	multiplexing: string;
+	statefulness: string;
+	securityModel: string;
+	trustAssumptions: string[];
+	latencyProfile: string;
+	failureRecovery: string;
+	operationalComplexity: string;
+	comparisonNotes?: string[];
+	sources?: { label: string; url: string }[];
+};
+
 export type ProtocolDefinition = {
 	schemaVersion: string;
 	id: string;
@@ -166,6 +194,8 @@ export type ProtocolDefinition = {
 	glossary?: GlossaryEntry[];
 	views: ViewId[];
 	comparisonDetails?: ProtocolComparisonDetails;
+	comparisonProfile?: ProtocolComparisonProfile;
+	conformance?: ProtocolConformance;
 };
 
 export type TraceEvent = {
